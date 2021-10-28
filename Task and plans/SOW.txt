@@ -1,0 +1,58 @@
+План:
+	1) Ознакомление с SFML на протяжении недели
+	2) Создать фигуры для тетриса:
+		1) Пространство имён Figure
+		2) Класс Figure
+		3) Создать вектора расположений пикселей для каждой фигуры:
+			struct Point
+			{
+			    int coordinateX;
+			    int coordinateY;
+			}
+
+			vector<Point> FigureType = { Figure'sPixelLocation };
+			...
+		4) Научить фигуры вращаться
+		5) Добавить рандомное выпадение фигур
+		6) Вывод следующей фигуры на экран (где-то сбоку)
+		7) Вывести текущий счёт
+		8) Добавить ускорение, эквивалентное текущему счёту
+
+---------------------------------------------------------------------------------
+
+Подсказки:
+	1) Названия фигур:
+		1) OrangeRicky 	// L
+		2) BlueRicky   	// J
+		3) Cleverland	// Z
+		4) Rhode Island	// !Z
+		5) Hero		// I
+		6) Teewee	// T
+		7) Smashboy	// O
+	  Подробнее можно прочитать по ссылке:
+		https://genapilot.ru/u-figur-v-tetrise-okazyvaetsja-est-imena
+
+	2) Матрица с номерами расположения фигур:
+		_________
+		|0  |  1|
+		|2  |  3|
+		|4  |  5|
+		|6  |  7|
+		|_______|
+
+	3) Чтоб сделать текстуру фигуры на экране:
+		vector<Point> texture;	// текстура фигуры
+		// конструктор класса фигур
+		Figure Figure(vector<Point> FigureCoord)
+		{
+		    texture.CoordinateX = FigureCoord.CoordinateX % 2;
+		    texture.CoordinateY = FigureType.CoordinateY / 2;
+		}
+ 
+---------------------------------------------------------------------------------
+
+При релизе проекта удалить:
+	1) папку bin в SFML
+	2) папку example в SFML
+	3) папку doc в SFML
+	?) license.md && readme.md

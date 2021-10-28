@@ -1,7 +1,6 @@
 ﻿#pragma once
 
 #include <iostream>
-#include <time.h>
 
 #include "ClassicMode.h"
 #include "Figure.h"
@@ -34,9 +33,10 @@ ClassicMode::ClassicMode(void)
 		// 2 arg - start y point
 		// 3 arg - texture's width
 		// 4 arg - texture's height
-		sprite.setTextureRect(sf::IntRect(config::textureSize.width * i, 0, 
+		sprite.setTextureRect(sf::IntRect(config::textureSize.width * i, 0,
 			config::textureSize.width, config::textureSize.height)
 		);
+
 		this->figuresVector.push_back(new Figure(sprite, (FigureType)i));
 	}
 	// we set false, because the square can't be rotated
@@ -68,8 +68,11 @@ ClassicMode::ClassicMode(void)
 	for (int i = 0; i < gameFieldHeight; i++)
 	{
 		this->gameField[i].resize(gameFieldWidth);
-		// initialized vector with -1
-		memset(this->gameField[i].data(), -1, gameFieldWidth);
+		// initialized vector with empty pixels
+		for (int j = 0; j < gameFieldWidth; j++)
+		{
+			gameField[i][j] = FigureType::Empty;
+		}
 	}
 }
 
@@ -118,6 +121,7 @@ int ClassicMode::startGame(void)
 			if (!figure.move(0, 1))
 			{
 				this->setCoordToGamefield(figure);
+				outputGameField();
 
 				this->setNextFigure(figure);
 				// move to center of the screen
@@ -131,7 +135,7 @@ int ClassicMode::startGame(void)
 
 		window.clear(sf::Color::White);
 		window.draw(this->gameFieldSprite);
-		
+		this->drawOldFigures();
 		figure.draw(window);
 		window.display();
 	}
@@ -166,6 +170,7 @@ void ClassicMode::bindingKeys(const int pressedKey, Figure& figure)
 		if (!figure.move(0, 1))
 		{
 			this->setCoordToGamefield(figure);
+			outputGameField();
 
 			this->setNextFigure(figure);
 			// move to center of the screen
@@ -219,11 +224,64 @@ void ClassicMode::setNextFigure(Figure& figure)
 void ClassicMode::setCoordToGamefield(Figure& figure)
 {
 	std::vector<Point> figureCoord = figure.getCoord();
-	const int textureNumber = figure.getFigureType();
+	const FigureType textureType = figure.getFigureType();
 
 	const int pixelCount = figureCoord.size();
 	for (int i = 0; i < pixelCount; i++)
 	{
-		this->gameField[figureCoord[i].coordY][figureCoord[i].coordX] = textureNumber;
+		this->gameField[figureCoord[i].coordY][figureCoord[i].coordX] = textureType;
 	}
+}
+
+void ClassicMode::drawOldFigures(void)
+{
+	const int gameFieldHeight = this->gameField.size();
+	const int gameFieldWidth = this->gameField[0].size();
+	for (int coordY = (gameFieldHeight - 1); coordY >= 0; coordY--)
+	{
+		int drawnPixelsInLine = 0;
+		for (int coordX = (gameFieldWidth - 1); coordX >= 0; coordX--)
+		{
+			// -1 - empty pixel
+			if (gameField[coordY][coordX] != FigureType::Empty)
+			{
+				sf::Sprite sprite(this->figureTextures);
+				// setTectureRect args:
+				// 1 arg - start x point
+				// 2 arg - start y point
+				// 3 arg - texture's width
+				// 4 arg - texture's height
+				sprite.setTextureRect(sf::IntRect(config::textureSize.width * gameField[coordY][coordX], 0,
+					config::textureSize.width, config::textureSize.height)
+				);
+				// our texture has size 256x256 so we are narrowing this texture to 16x16
+				sprite.setScale((float)config::gamePixelSize.width / (float)config::textureSize.height,
+					(float)config::gamePixelSize.height / (float)config::textureSize.height);
+
+				const int pixelCount = figuresPoint[this->gameField[coordY][coordX]].size();
+				for (int pixelNumber = 0; pixelNumber < pixelCount; pixelNumber++)
+				{
+					sprite.setPosition(coordX * config::gamePixelSize.width,
+						coordY * config::gamePixelSize.height);
+					window.draw(sprite);
+				}
+			}
+		}
+	}
+}
+
+void ClassicMode::outputGameField(void)
+{
+	const int gameFieldHeight = this->gameField.size();
+	const int gameFieldWidth = this->gameField[0].size();
+	for (int i = 0; i < gameFieldHeight; i++)
+	{
+		int drawnPixelsInLine = 0;
+		for (int j = 0; j < gameFieldWidth; j++)
+		{
+			std::cout << gameField[i][j] << "\t";
+		}
+		std::cout << std::endl;
+	}
+	std::cout << "\n\n";
 }

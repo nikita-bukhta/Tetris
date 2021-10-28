@@ -28,13 +28,14 @@ const std::vector<std::vector<int>> figuresPoint = {
 //		https://genapilot.ru/u-figur-v-tetrise-okazyvaetsja-est-imena
 enum FigureType
 {
-	Cleverland,		// Z
-	OrangeRicky,	// L
-	Smashboy,		// O
-	RhodeIsland,	// S
-	Hero,			// I
-	BlueRicky,		// J
-	Teewee			// T
+	Empty = -1,			// Empty pixel
+	Cleverland = 0,		// Z
+	OrangeRicky,		// L
+	Smashboy,			// O
+	RhodeIsland,		// S
+	Hero,				// I
+	BlueRicky,			// J
+	Teewee				// T
 };
 
 struct Point

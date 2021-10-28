@@ -17,21 +17,22 @@
 //	if you don't do .setSmooth(true) method of sf::Texture you may have problem
 //	with image quality
 //
-Figure::Figure(const sf::Sprite& sprite, const std::vector<int>& figurePoint) : pixelCount(4)
+Figure::Figure(const sf::Sprite& sprite, FigureType figureType) : pixelCount(4)
 {
 	this->canRotate = true;
+	this->figureType = figureType;
 
 	this->sprite = sprite;
 	// our texture has size 256x256 so we are narrowing this texture to 16x16
-	this->sprite.setScale(config::gamePixelSize.width / config::textureSize.height,
-		config::gamePixelSize.height / config::textureSize.height);
+	this->sprite.setScale((float)config::gamePixelSize.width / (float)config::textureSize.height,
+		(float)config::gamePixelSize.height / (float)config::textureSize.height);
 	
 	// create figure pixels' position
 	for (int i = 0; i < pixelCount; i++)
 	{
 		this->pixelsCoord.push_back(Point{
-			figurePoint[i] % 2,
-			figurePoint[i] / 2
+			figuresPoint[figureType][i] % 2,
+			figuresPoint[figureType][i] / 2
 			});
 	}
 }
@@ -41,6 +42,7 @@ Figure::Figure(const Figure& other) : pixelCount(other.pixelCount)
 	this->canRotate = other.canRotate;
 	this->sprite = other.sprite;
 	this->pixelsCoord = other.pixelsCoord;
+	this->figureType = other.figureType;
 }
 
 Figure Figure::operator= (const Figure& other)
@@ -48,6 +50,7 @@ Figure Figure::operator= (const Figure& other)
 	this->canRotate = other.canRotate;
 	this->sprite = other.sprite;
 	this->pixelsCoord = other.pixelsCoord;
+	this->figureType = other.figureType;
 	
 	return *this;
 }
@@ -217,4 +220,14 @@ bool Figure::getRotation(void)
 void Figure::setRotation(bool canRotate)
 {
 	this->canRotate = canRotate;
+}
+
+std::vector<Point> Figure::getCoord(void)
+{
+	return this->pixelsCoord;
+}
+
+FigureType Figure::getFigureType(void)
+{
+	return this->figureType;
 }

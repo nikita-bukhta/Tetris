@@ -37,7 +37,7 @@ ClassicMode::ClassicMode(void)
 		sprite.setTextureRect(sf::IntRect(config::textureSize.width * i, 0, 
 			config::textureSize.width, config::textureSize.height)
 		);
-		this->figuresVector.push_back(new Figure(sprite, figuresPoint[i]));
+		this->figuresVector.push_back(new Figure(sprite, (FigureType)i));
 	}
 	// we set false, because the square can't be rotated
 	// if we rotate square, that could up by 1 lvl up
@@ -52,7 +52,7 @@ ClassicMode::ClassicMode(void)
 		this->processingFigures.push_back(*(this->figuresVector[random(0, (figuresCount - 1))]));
 	}
 
-	// ---------------------------filling vectors with figures---------------------------- //
+	// ---------------------------set game field---------------------------- //
 	
 	// download game field texture
 	if (!this->gameFieldTexture.loadFromFile("img/game frame.png"))
@@ -60,8 +60,17 @@ ClassicMode::ClassicMode(void)
 		std::cout << "Frame` texture wasn't loaded! Mb is not exist";
 	}
 	this->gameFieldTexture.setSmooth(true);
-
 	this->gameFieldSprite.setTexture(this->gameFieldTexture);
+
+	const int gameFieldWidth = config::gameFieldSize.width / config::gamePixelSize.width;
+	const int gameFieldHeight = config::gameFieldSize.height / config::gamePixelSize.height;
+	gameField.resize(gameFieldHeight);
+	for (int i = 0; i < gameFieldHeight; i++)
+	{
+		this->gameField[i].resize(gameFieldWidth);
+		// initialized vector with -1
+		memset(this->gameField[i].data(), -1, gameFieldWidth);
+	}
 }
 
 ClassicMode::~ClassicMode(void)
@@ -108,6 +117,8 @@ int ClassicMode::startGame(void)
 			// if we are in the button of game field
 			if (!figure.move(0, 1))
 			{
+				this->setCoordToGamefield(figure);
+
 				this->setNextFigure(figure);
 				// move to center of the screen
 				// we divide width of game fild by width of pixelSize to know how many pixels we can fit into.
@@ -154,6 +165,8 @@ void ClassicMode::bindingKeys(const int pressedKey, Figure& figure)
 		// if we are in the button of game field
 		if (!figure.move(0, 1))
 		{
+			this->setCoordToGamefield(figure);
+
 			this->setNextFigure(figure);
 			// move to center of the screen
 			// we divide width of game fild by width of pixelSize to know how many pixels we can fit into.
@@ -195,4 +208,22 @@ void ClassicMode::setNextFigure(Figure& figure)
 	
 	// copy current figure in figure object
 	figure = this->processingFigures[0];
+}
+
+// set game frame with new figure
+// this method need to display old figure on the screen
+// number in vector is texture number
+// 
+// figure - figure we write off in game field
+//
+void ClassicMode::setCoordToGamefield(Figure& figure)
+{
+	std::vector<Point> figureCoord = figure.getCoord();
+	const int textureNumber = figure.getFigureType();
+
+	const int pixelCount = figureCoord.size();
+	for (int i = 0; i < pixelCount; i++)
+	{
+		this->gameField[figureCoord[i].coordY][figureCoord[i].coordX] = textureNumber;
+	}
 }

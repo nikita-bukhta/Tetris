@@ -4,8 +4,8 @@ namespace config
 {
 	struct PictureSize
 	{
-		float width;
-		float height;
+		int width;
+		int height;
 	};
 
 	const PictureSize gamePixelSize = {

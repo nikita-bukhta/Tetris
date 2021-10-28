@@ -23,10 +23,30 @@ const std::vector<std::vector<int>> figuresPoint = {
 	{ 1, 2, 3, 5 }	 // T
 };
 
+// type of figures
+// more information you can read there:
+//		https://genapilot.ru/u-figur-v-tetrise-okazyvaetsja-est-imena
+enum FigureType
+{
+	Cleverland,		// Z
+	OrangeRicky,	// L
+	Smashboy,		// O
+	RhodeIsland,	// S
+	Hero,			// I
+	BlueRicky,		// J
+	Teewee			// T
+};
+
+struct Point
+{
+	int coordX;
+	int coordY;
+};
+
 class Figure
 {
 public:
-	Figure(const sf::Sprite& sprite, const std::vector<int>& figurePoint);
+	Figure(const sf::Sprite& sprite, FigureType figureType);
 	Figure(const Figure& other);
 	Figure operator= (const Figure& other);
 
@@ -40,16 +60,16 @@ public:
 	bool getRotation(void);
 	void setRotation(bool canRotate);
 
-private:
-	struct Point
-	{
-		int coordX;
-		int coordY;
-	};
+	std::vector<Point> getCoord(void);
 
+	FigureType getFigureType(void);
+
+private:
 	const int pixelCount;
 	bool canRotate;
 	sf::Sprite sprite;
 	std::vector<Point> pixelsCoord;
+
+	FigureType figureType;
 };
 

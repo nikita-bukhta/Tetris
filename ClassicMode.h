@@ -13,6 +13,8 @@ public:
 
 	int startGame(void);
 private:
+	std::vector<std::vector<int>> gameField;
+
 	sf::Texture figureTextures;				// there is contain figures` texture
 	sf::Texture gameFieldTexture;			// there is contain game field texture
 	sf::Sprite gameFieldSprite;				// there is contain game field sprite
@@ -24,5 +26,6 @@ private:
 	void bindingKeys(const int pressedKey, Figure& figure);
 	int random(int min, int max);
 	void setNextFigure(Figure& figure);
+	void setCoordToGamefield(Figure& figure);
 };
 

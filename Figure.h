@@ -52,7 +52,7 @@ public:
 	Figure operator= (const Figure& other);
 
 	void draw(sf::RenderWindow& window);
-	bool rotate(void);
+	bool rotate(bool clockwise);
 	bool move(const int moveXBy, const int moveYBy);
 	void displayCoord(void);
 

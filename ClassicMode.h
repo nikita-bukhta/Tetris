@@ -12,12 +12,17 @@ public:
 	~ClassicMode(void);
 
 	int startGame(void);
+
 private:
 	std::vector<std::vector<FigureType>> gameField;
 
 	sf::Texture figureTextures;				// there is contain figures` texture
+
 	sf::Texture gameFieldTexture;			// there is contain game field texture
 	sf::Sprite gameFieldSprite;				// there is contain game field sprite
+
+	sf::Texture gameOverTexture;			// there is game over img
+	sf::Sprite gameOverSprite;				// and sprite
 
 	sf::RenderWindow window;				// main window
 	std::vector<Figure*> figuresVector;		// there are contain all figures
@@ -28,6 +33,8 @@ private:
 	void setNextFigure(Figure& figure);
 	void setCoordToGamefield(Figure& figure);
 	void drawOldFigures(void);
+	bool thereIsEmpty(Figure& figure);
+	void createNewFigure(Figure& figure);
 
 	void outputGameField(void);
 };

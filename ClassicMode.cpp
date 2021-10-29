@@ -57,7 +57,7 @@ ClassicMode::ClassicMode(void)
 	// download game field texture
 	if (!this->gameFieldTexture.loadFromFile("img/game frame.png"))
 	{
-		std::cout << "Frame` texture wasn't loaded! Mb is not exist";
+		std::cout << "Frame` texture wasn't loaded! Mb is not exist" << std::endl;
 	}
 	this->gameFieldTexture.setSmooth(true);
 	this->gameFieldSprite.setTexture(this->gameFieldTexture);
@@ -74,6 +74,20 @@ ClassicMode::ClassicMode(void)
 			gameField[i][j] = FigureType::Empty;
 		}
 	}
+
+	// ---------------------------game over---------------------------- //
+
+	// download game over texture
+	if (!this->gameOverTexture.loadFromFile("img/game over.png"))
+	{
+		std::cout << "Game over' texture wasn't loaded! Mb is not exist" << std::endl;
+	}
+	this->gameOverTexture.setSmooth(true);
+	this->gameOverSprite.setTexture(this->gameOverTexture);
+	sf::Vector2u imgSize = this->gameOverTexture.getSize();
+	// resize to our game field size
+	this->gameOverSprite.setScale((float)config::gameFieldSize.width / (float)imgSize.x,
+		(float)config::gameFieldSize.height / (float)imgSize.y);
 }
 
 ClassicMode::~ClassicMode(void)
@@ -120,23 +134,33 @@ int ClassicMode::startGame(void)
 			// if we are in the button of game field
 			if (!figure.move(0, 1))
 			{
-				this->setCoordToGamefield(figure);
-				outputGameField();
-
-				this->setNextFigure(figure);
-				// move to center of the screen
-				// we divide width of game fild by width of pixelSize to know how many pixels we can fit into.
-				// divide by 2 to find center of game field and minus 1 to move left
-				figure.move(config::gameFieldSize.width / config::gamePixelSize.width / 2 - 1, 0);
+				this->createNewFigure(figure);
+			}
+			// if we found figure under our figure
+			else if (!thereIsEmpty(figure))
+			{
+				figure.move(0, -1);
+				this->createNewFigure(figure);
 			}
 
 			timer.restart();
 		}
 
 		window.clear(sf::Color::White);
+
+		if (!this->thereIsEmpty(figure))
+		{
+			window.draw(this->gameOverSprite);
+			window.display();
+			timer.restart();
+			while (timer.getElapsedTime().asSeconds() < 5.0) {};
+			break;
+		}
+
 		window.draw(this->gameFieldSprite);
 		this->drawOldFigures();
 		figure.draw(window);
+
 		window.display();
 	}
 
@@ -155,12 +179,20 @@ void ClassicMode::bindingKeys(const int pressedKey, Figure& figure)
 	case sf::Keyboard::Left:
 	case sf::Keyboard::A:
 		figure.move(-1, 0);
+		if (!thereIsEmpty(figure))
+		{
+			figure.move(1, 0);
+		}
 		break;
 
 		// move right
 	case sf::Keyboard::Right:
 	case sf::Keyboard::D:
 		figure.move(1, 0);
+		if (!thereIsEmpty(figure))
+		{
+			figure.move(-1, 0);
+		}
 		break;
 
 		// fast moving down
@@ -169,14 +201,13 @@ void ClassicMode::bindingKeys(const int pressedKey, Figure& figure)
 		// if we are in the button of game field
 		if (!figure.move(0, 1))
 		{
-			this->setCoordToGamefield(figure);
-			outputGameField();
-
-			this->setNextFigure(figure);
-			// move to center of the screen
-			// we divide width of game fild by width of pixelSize to know how many pixels we can fit into.
-			// divide by 2 to find center of game field and minus 1 to move left
-			figure.move(config::gameFieldSize.width / config::gamePixelSize.width / 2 - 1, 0);
+			this->createNewFigure(figure);
+		}
+		// if we found figure under our figure
+		else if (!thereIsEmpty(figure))
+		{
+			figure.move(0, -1);
+			this->createNewFigure(figure);
 		}
 		break;
 
@@ -184,7 +215,11 @@ void ClassicMode::bindingKeys(const int pressedKey, Figure& figure)
 	case sf::Keyboard::Up:
 	case sf::Keyboard::W:
 	case sf::Keyboard::Space:
-		figure.rotate();
+		//figure.rotate(true);
+		if (figure.rotate(true) && !thereIsEmpty(figure))
+		{
+			figure.rotate(false);
+		}
 		break;
 	}
 }
@@ -270,6 +305,42 @@ void ClassicMode::drawOldFigures(void)
 	}
 }
 
+// check if our figure have fallen on the not empty pixels
+// 
+// figure - current figure we move
+// 
+// return true - if pixels is not empty
+// return false - if pixels is empty
+//
+bool ClassicMode::thereIsEmpty(Figure& figure)
+{
+	std::vector<Point> figureCoord = figure.getCoord();
+
+	const int pixelCount = figureCoord.size();
+	for (int i = 0; i < pixelCount; i++)
+	{
+		if (this->gameField[figureCoord[i].coordY][figureCoord[i].coordX]
+			!= FigureType::Empty)
+		{
+			return false;
+		}
+	}
+
+	return true;
+}
+
+void ClassicMode::createNewFigure(Figure& figure)
+{
+	this->setCoordToGamefield(figure);
+
+	this->setNextFigure(figure);
+	// move to center of the screen
+	// we divide width of game fild by width of pixelSize to know how many pixels we can fit into.
+	// divide by 2 to find center of game field and minus 1 to move left
+	figure.move(config::gameFieldSize.width / config::gamePixelSize.width / 2 - 1, 0);
+}
+
+// delete before relize
 void ClassicMode::outputGameField(void)
 {
 	const int gameFieldHeight = this->gameField.size();

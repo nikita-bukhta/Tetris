@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include <iostream>
+#include <random>	
 
 #include "ClassicMode.h"
 #include "Figure.h"
@@ -230,7 +231,11 @@ void ClassicMode::bindingKeys(const int pressedKey, Figure& figure)
 // return random number from min to max included
 int ClassicMode::random(int min, int max)
 {
-	return min + rand() % ((max + 1) - min);
+	std::random_device rd;
+	std::mt19937 generator(rd());
+	std::uniform_int_distribution<> range(min, max);
+
+	return range(generator);
 }
 
 // take the next figure from queue
@@ -280,6 +285,7 @@ void ClassicMode::drawOldFigures(void)
 			// -1 - empty pixel
 			if (gameField[coordY][coordX] != FigureType::Empty)
 			{
+				drawnPixelsInLine++;
 				sf::Sprite sprite(this->figureTextures);
 				// setTectureRect args:
 				// 1 arg - start x point
@@ -301,6 +307,11 @@ void ClassicMode::drawOldFigures(void)
 					window.draw(sprite);
 				}
 			}
+		}
+		// if we draw nothing in current line we stop
+		if (drawnPixelsInLine == 0)
+		{
+			break;
 		}
 	}
 }
@@ -356,3 +367,4 @@ void ClassicMode::outputGameField(void)
 	}
 	std::cout << "\n\n";
 }
+

@@ -7,6 +7,11 @@
 #include "Figure.h"
 #include "config.h"
 
+// TODO:	show next figure
+//			show total score (more lines you destroy simultaneously, more score you get)
+//			add boosting depending from score
+//
+
 // create main window and figures we use in game
 ClassicMode::ClassicMode(void)
 {
@@ -130,9 +135,14 @@ int ClassicMode::startGame(void)
 
 		// if time left, we move down figure by 1
 		// and restart timer
+		// 
+		// TODO:	add boosting time that equal with count of score
+		//			more score you have, bigger figure falling speed
 		if (timer.getElapsedTime().asSeconds() >= 1.0)
 		{
 			// if we are in the button of game field
+			// TODO: fix time we need waiting to control new figure
+			//
 			if (!figure.move(0, 1))
 			{
 				this->createNewFigure(figure);
@@ -332,10 +342,6 @@ void ClassicMode::drawOldFigures(void)
 					window.draw(sprite);
 				}
 			}
-			else
-			{
-				//window.draw(emptySprite);
-			}
 		}
 	}
 }
@@ -411,13 +417,6 @@ void ClassicMode::getFilledLinesVector(std::vector<int>& filledLines)
 				filledPixelsCount++;
 			}
 		}
-		//std::cout << filledPixelsCount << std::endl;
-
-		// if line is empty
-		//if (filledPixelsCount == 0)
-		//{
-		//	break;
-		//}
 		// if line is filled totally
 		if (filledPixelsCount == pixelsCountInLine)
 		{

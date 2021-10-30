@@ -35,6 +35,8 @@ private:
 	void drawOldFigures(void);
 	bool thereIsEmpty(Figure& figure);
 	void createNewFigure(Figure& figure);
+	void getFilledLinesVector(std::vector<int>& filledLines);
+	void destroyLines(std::vector<int> filledLines);
 
 	void outputGameField(void);
 };

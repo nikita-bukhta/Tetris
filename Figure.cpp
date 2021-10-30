@@ -82,6 +82,11 @@ void Figure::draw(sf::RenderWindow& window)
 //
 bool Figure::rotate(bool clockwise)
 {
+	if (!this->canRotate)
+	{
+		return true;
+	}
+
 	bool moveIsSuccessful = true;
 
 	Point rotationCenter = pixelsCoord[1];

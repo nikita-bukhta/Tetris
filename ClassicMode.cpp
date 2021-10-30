@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include <iostream>
+#include <random>	
 
 #include "ClassicMode.h"
 #include "Figure.h"
@@ -135,12 +136,22 @@ int ClassicMode::startGame(void)
 			if (!figure.move(0, 1))
 			{
 				this->createNewFigure(figure);
+
+				// destroy filled lines
+				std::vector<int> filledLines;
+				this->getFilledLinesVector(filledLines);
+				destroyLines(filledLines);
 			}
 			// if we found figure under our figure
 			else if (!thereIsEmpty(figure))
 			{
 				figure.move(0, -1);
 				this->createNewFigure(figure);
+
+				// destroy filled lines
+				std::vector<int> filledLines;
+				this->getFilledLinesVector(filledLines);
+				destroyLines(filledLines);
 			}
 
 			timer.restart();
@@ -202,12 +213,24 @@ void ClassicMode::bindingKeys(const int pressedKey, Figure& figure)
 		if (!figure.move(0, 1))
 		{
 			this->createNewFigure(figure);
+
+			// destroy filled lines
+			std::vector<int> filledLines;
+			this->getFilledLinesVector(filledLines);
+			destroyLines(filledLines);
 		}
 		// if we found figure under our figure
 		else if (!thereIsEmpty(figure))
 		{
 			figure.move(0, -1);
 			this->createNewFigure(figure);
+
+			// destroy filled lines
+			std::vector<int> filledLines;
+			this->getFilledLinesVector(filledLines);
+			destroyLines(filledLines);
+			if (filledLines.size() > 0)
+				this->outputGameField();
 		}
 		break;
 
@@ -230,7 +253,11 @@ void ClassicMode::bindingKeys(const int pressedKey, Figure& figure)
 // return random number from min to max included
 int ClassicMode::random(int min, int max)
 {
-	return min + rand() % ((max + 1) - min);
+	std::random_device rd;
+	std::mt19937 generator(rd());
+	std::uniform_int_distribution<> range(min, max);
+
+	return range(generator);
 }
 
 // take the next figure from queue
@@ -272,15 +299,19 @@ void ClassicMode::drawOldFigures(void)
 {
 	const int gameFieldHeight = this->gameField.size();
 	const int gameFieldWidth = this->gameField[0].size();
+
+	//sf::Texture emptyTexture;
+	//emptyTexture.create(config::gamePixelSize.width, config::gamePixelSize.height);
+	sf::Sprite sprite(this->figureTextures);
+	//sf::Sprite emptySprite(emptyTexture);	// for empty pixels;
+
 	for (int coordY = (gameFieldHeight - 1); coordY >= 0; coordY--)
 	{
-		int drawnPixelsInLine = 0;
 		for (int coordX = (gameFieldWidth - 1); coordX >= 0; coordX--)
 		{
 			// -1 - empty pixel
 			if (gameField[coordY][coordX] != FigureType::Empty)
 			{
-				sf::Sprite sprite(this->figureTextures);
 				// setTectureRect args:
 				// 1 arg - start x point
 				// 2 arg - start y point
@@ -300,6 +331,10 @@ void ClassicMode::drawOldFigures(void)
 						coordY * config::gamePixelSize.height);
 					window.draw(sprite);
 				}
+			}
+			else
+			{
+				//window.draw(emptySprite);
 			}
 		}
 	}
@@ -355,4 +390,65 @@ void ClassicMode::outputGameField(void)
 		std::cout << std::endl;
 	}
 	std::cout << "\n\n";
+}
+
+// return indexes of filled lines
+//
+void ClassicMode::getFilledLinesVector(std::vector<int>& filledLines)
+{
+	const int linesCount = config::gameFieldSize.height / config::gamePixelSize.height;
+	const int pixelsCountInLine = config::gameFieldSize.width / config::gamePixelSize.width;
+	// start from bottom in order to find filled lines
+	for (int coordY = 0; coordY < linesCount; coordY++)
+	{
+		int filledPixelsCount = 0;
+		for (int coordX = 0; coordX < pixelsCountInLine; coordX++)
+		{
+			// if this game cell is not empty
+			if (this->gameField[coordY][coordX] != FigureType::Empty)
+			{
+				// add 1 to total filled lines
+				filledPixelsCount++;
+			}
+		}
+		//std::cout << filledPixelsCount << std::endl;
+
+		// if line is empty
+		//if (filledPixelsCount == 0)
+		//{
+		//	break;
+		//}
+		// if line is filled totally
+		if (filledPixelsCount == pixelsCountInLine)
+		{
+			//std::cout << "word" << std::endl;
+			filledLines.push_back(coordY);
+		}
+	}
+}
+
+// destroy filled lines and push down lines above
+// 
+// filledLines - vector of filled lines positions
+//
+void ClassicMode::destroyLines(std::vector<int> filledLines)
+{
+	const int filledLinesCount = filledLines.size();
+	const int pixelsCountInLine = config::gameFieldSize.width / config::gamePixelSize.width;
+	const int gameFieldLinesCount = this->gameField.size();
+	for (int i = 0; i < filledLinesCount; i++)
+	{
+		int coordY = filledLines[i];
+		// make line empty
+		for (int coordX = 0; coordX < pixelsCountInLine; coordX++)
+		{
+			this->gameField[coordY][coordX] = FigureType::Empty;
+		}
+
+		// push down lines above
+		for (coordY; coordY > 0; coordY--)
+		{
+			swap(this->gameField[coordY], this->gameField[coordY - 1]);
+		}
+	}
 }

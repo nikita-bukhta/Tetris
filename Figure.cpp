@@ -59,19 +59,57 @@ Figure Figure::operator= (const Figure& other)
 	return *this;
 }
 
-// draw figure for future displaing window, but no display them
+// move figure
 // 
-// window - window where you want to draw figure
+// moveXBy - move figure by x pixels
+// moveYBy - move figure by y pixels
+// 
+// 1 pixels == 1 figure pixel (on the screen is 16x16 by standard for this game)
+// 
+// return true - if operation success
+// return false - if movement is impossible
+// 
+// TODO: just optimize it
 //
-void Figure::draw(sf::RenderWindow& window)
+bool Figure::move(const int moveXBy, const int moveYBy)
 {
+	bool moveIsSuccessful = true;
 	for (int i = 0; i < pixelCount; i++)
 	{
-		// set figure in current coordinate
-		sprite.setPosition(pixelsCoord[i].coordX * config::gamePixelSize.width,
-			pixelsCoord[i].coordY * config::gamePixelSize.height);
-		window.draw(sprite);
+		this->pixelsCoord[i].coordX += moveXBy;
+		this->pixelsCoord[i].coordY += moveYBy;
+
+		// check if pixel in game grame
+		// [0; 0] - gameFieldSize - coordinates from to of game frame
+		bool coordXIsRight = this->pixelsCoord[i].coordX >= 0 &&
+			this->pixelsCoord[i].coordX <
+			(config::gameFieldSize.width / config::gamePixelSize.width);
+		bool coordYIsRight = this->pixelsCoord[i].coordY >= 0 &&
+			this->pixelsCoord[i].coordY <
+			(config::gameFieldSize.height / config::gamePixelSize.height);
+
+		// if pixel is not in frame
+		// we stop a loop
+		if (!(coordXIsRight && coordYIsRight))
+		{
+			moveIsSuccessful = false;
+		}
 	}
+
+	// if movement is impossible, just roll back pixels
+	if (!moveIsSuccessful)
+	{
+		// roll back figures
+		for (int i = 0; i < pixelCount; i++)
+		{
+			this->pixelsCoord[i].coordX -= moveXBy;
+			this->pixelsCoord[i].coordY -= moveYBy;
+		}
+
+		return false;
+	}
+
+	return true;
 }
 
 // just rotate figure if is possible
@@ -188,92 +226,6 @@ bool Figure::rotate(bool clockwise)
 	return true;
 }
 
-// move figure
-// 
-// moveXBy - move figure by x pixels
-// moveYBy - move figure by y pixels
-// 
-// 1 pixels == 1 figure pixel (on the screen is 16x16 by standard for this game)
-// 
-// return true - if operation success
-// return false - if movement is impossible
-// 
-// TODO: just optimize it
-//
-bool Figure::move(const int moveXBy, const int moveYBy)
-{
-	bool moveIsSuccessful = true;
-	for (int i = 0; i < pixelCount; i++)
-	{
-		this->pixelsCoord[i].coordX += moveXBy;
-		this->pixelsCoord[i].coordY += moveYBy;
-
-		// check if pixel in game grame
-		// [0; 0] - gameFieldSize - coordinates from to of game frame
-		bool coordXIsRight = this->pixelsCoord[i].coordX >= 0 &&
-			this->pixelsCoord[i].coordX < 
-			(config::gameFieldSize.width / config::gamePixelSize.width);
-		bool coordYIsRight = this->pixelsCoord[i].coordY >= 0 &&
-			this->pixelsCoord[i].coordY <
-			(config::gameFieldSize.height / config::gamePixelSize.height);
-
-		// if pixel is not in frame
-		// we stop a loop
-		if (!(coordXIsRight && coordYIsRight))
-		{
-			moveIsSuccessful = false;
-		}
-	}
-
-	// if movement is impossible, just roll back pixels
-	if (!moveIsSuccessful)
-	{
-		// roll back figures
-		for (int i = 0; i < pixelCount; i++)
-		{
-			this->pixelsCoord[i].coordX -= moveXBy;
-			this->pixelsCoord[i].coordY -= moveYBy;
-		}
-
-		return false;
-	}
-
-	return true;
-}
-
-// put figure to this position
-// 
-// coordX - position by x
-// coordY - position by y
-//
-void Figure::setPosition(const int coordX, const int coordY)
-{
-	const int moveXBy = coordX - this->pixelsCoord[0].coordX;
-	const int moveYBy = coordY - this->pixelsCoord[0].coordY;
-
-	for (int i = 0; i < pixelCount; i++)
-	{
-		this->pixelsCoord[i].coordX += moveXBy;
-		this->pixelsCoord[i].coordY += moveYBy;
-	}
-}
-
-// output current coordinates of figure on console
-void Figure::displayCoord(void)
-{
-	for (int i = 0; i < pixelCount; i++)
-	{
-		std::cout << this->pixelsCoord[i].coordX << "; " << this->pixelsCoord[i].coordY << "\t";
-	}
-	std::cout << std::endl;
-}
-
-// output pixel count of our figure (default is 4 int this game)
-int Figure::getPixelCount(void)
-{
-	return pixelCount;
-}
-
 // return rotation for our figure
 // 
 // true - is able to rotate
@@ -294,12 +246,64 @@ void Figure::setRotation(bool canRotate)
 	this->canRotate = canRotate;
 }
 
+// output pixel count of our figure (default is 4 int this game)
+int Figure::getPixelCount(void)
+{
+	return pixelCount;
+}
+
+// get figure's pixels coord
+//
+// return vector<Point> - vector of figure's pixels coord
+//
 std::vector<Point> Figure::getCoord(void)
 {
 	return this->pixelsCoord;
 }
 
+// put figure to this position
+// 
+// coordX - position by x
+// coordY - position by y
+//
+void Figure::setPosition(const int coordX, const int coordY)
+{
+	const int moveXBy = coordX - this->pixelsCoord[0].coordX;
+	const int moveYBy = coordY - this->pixelsCoord[0].coordY;
+
+	for (int i = 0; i < pixelCount; i++)
+	{
+		this->pixelsCoord[i].coordX += moveXBy;
+		this->pixelsCoord[i].coordY += moveYBy;
+	}
+}
+
 FigureType Figure::getFigureType(void)
 {
 	return this->figureType;
+}
+
+// draw figure for future displaing window, but no display them
+// 
+// window - window where you want to draw figure
+//
+void Figure::draw(sf::RenderWindow& window)
+{
+	for (int i = 0; i < pixelCount; i++)
+	{
+		// set figure in current coordinate
+		sprite.setPosition(pixelsCoord[i].coordX * config::gamePixelSize.width,
+			pixelsCoord[i].coordY * config::gamePixelSize.height);
+		window.draw(sprite);
+	}
+}
+
+// output current coordinates of figure on console
+void Figure::displayCoord(void)
+{
+	for (int i = 0; i < pixelCount; i++)
+	{
+		std::cout << this->pixelsCoord[i].coordX << "; " << this->pixelsCoord[i].coordY << "\t";
+	}
+	std::cout << std::endl;
 }

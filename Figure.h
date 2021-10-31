@@ -4,6 +4,9 @@
 
 #include "SFML/Graphics.hpp"
 
+// TODO: change getCoord method (not return vector, but take it as arg)
+// TODO: create default constructor and some setters (mb)
+
 // figures point
 /* table for this points:
  * ---------
@@ -49,22 +52,34 @@ class Figure
 public:
 	Figure(const sf::Sprite& sprite, FigureType figureType);
 	Figure(const Figure& other);
+
+	// ----- operators ----- //
 	Figure operator= (const Figure& other);
 
-	void draw(sf::RenderWindow& window);
-	bool rotate(bool clockwise);
+	// ----- methods ----- //
+
+	// control figure
 	bool move(const int moveXBy, const int moveYBy);
-	void setPosition(const int coordX, const int coordY);
-	void displayCoord(void);
+	bool rotate(bool clockwise);
 
-	int getPixelCount(void);
+	// ----- getters and setters ----- //
 
+	// get and set possibility to rotate
 	bool getRotation(void);
 	void setRotation(bool canRotate);
 
+	int getPixelCount(void);
+
 	std::vector<Point> getCoord(void);
+	void setPosition(const int coordX, const int coordY);
 
 	FigureType getFigureType(void);
+
+	// ----- aditional methods ----- //
+
+	void draw(sf::RenderWindow& window);
+
+	void displayCoord(void);
 
 private:
 	const int pixelCount;

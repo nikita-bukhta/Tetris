@@ -32,15 +32,21 @@ private:
 	std::vector<Figure> processingFigures;	// there are figures, that displaing on the screen (current and next)
 
 	void bindingKeys(const int pressedKey);
-	int random(int min, int max);
-	void setNextFigure(void);
-	void setCoordToGamefield(void);
-	void drawOldFigures(void);
-	bool thereIsEmpty(void);
+
+	// work with figure
 	void createNewFigure(void);
+	void drawOldFigures(void);
+
+	// work with game field
+	void setCoordToGamefield(void);
+	bool thereIsEmpty(void);
 	void getFilledLinesVector(std::vector<int>& filledLines);
 	void destroyLines(std::vector<int> filledLines);
 
+	// useful methods
+	int random(int min, int max);
+
+	// useful methods but delete before reliaze
 	void outputGameField(void);
 };
 

@@ -274,51 +274,30 @@ void ClassicMode::bindingKeys(const int pressedKey)
 	}
 }
 
-// min - min number
-// max number
-// 
-// return random number from min to max included
-int ClassicMode::random(int min, int max)
-{
-	std::random_device rd;
-	std::mt19937 generator(rd());
-	std::uniform_int_distribution<> range(min, max);
-
-	return range(generator);
-}
-
-// take the next figure from queue
-// 
-// figure - main plaing figure we are controling
+// next figure is becomign current
+// and set next figure
 //
-void ClassicMode::setNextFigure(void)
+void ClassicMode::createNewFigure(void)
 {
+	this->setCoordToGamefield();
+
 	// the next figure is becoming current
 	this->processingFigures[0] = this->processingFigures[1];
 	// set the next figure after current
-	this->processingFigures[1] = *(this->figuresVector[this->random(0, 
+	this->processingFigures[1] = *(this->figuresVector[this->random(0,
 		(this->figuresVector.size() - 1))]
 		);
+
+	// move to center of the screen
+	// we divide width of game fild by width of pixelSize to know how many pixels we can fit into.
+	// divide by 2 to find center of game field and minus 1 to move left
+	this->processingFigures[0].setPosition(config::gameFieldSize.width / config::gamePixelSize.width / 2 - 1, 0);
+	this->processingFigures[1].setPosition((2 * config::gameFieldSize.width + config::infoGroundSize.width) /
+		(2 * config::gamePixelSize.width), 4);
 }
 
-// set game frame with new figure
-// this method need to display old figure on the screen
-// number in vector is texture number
-// 
-// figure - figure we write off in game field
+// draw all pixels, which we put
 //
-void ClassicMode::setCoordToGamefield(void)
-{
-	std::vector<Point> figureCoord = this->processingFigures[0].getCoord();
-	const FigureType textureType = this->processingFigures[0].getFigureType();
-
-	const int pixelCount = figureCoord.size();
-	for (int i = 0; i < pixelCount; i++)
-	{
-		this->gameField[figureCoord[i].coordY][figureCoord[i].coordX] = textureType;
-	}
-}
-
 void ClassicMode::drawOldFigures(void)
 {
 	const int gameFieldHeight = this->gameField.size();
@@ -360,9 +339,23 @@ void ClassicMode::drawOldFigures(void)
 	}
 }
 
+// set game frame with new figure
+// this method need to display old figure on the screen
+// number in vector is texture number
+//
+void ClassicMode::setCoordToGamefield(void)
+{
+	std::vector<Point> figureCoord = this->processingFigures[0].getCoord();
+	const FigureType textureType = this->processingFigures[0].getFigureType();
+
+	const int pixelCount = figureCoord.size();
+	for (int i = 0; i < pixelCount; i++)
+	{
+		this->gameField[figureCoord[i].coordY][figureCoord[i].coordX] = textureType;
+	}
+}
+
 // check if our figure have fallen on the not empty pixels
-// 
-// figure - current figure we move
 // 
 // return true - if pixels is not empty
 // return false - if pixels is empty
@@ -384,37 +377,9 @@ bool ClassicMode::thereIsEmpty(void)
 	return true;
 }
 
-void ClassicMode::createNewFigure(void)
-{
-	this->setCoordToGamefield();
-
-	this->setNextFigure();
-	// move to center of the screen
-	// we divide width of game fild by width of pixelSize to know how many pixels we can fit into.
-	// divide by 2 to find center of game field and minus 1 to move left
-	this->processingFigures[0].setPosition(config::gameFieldSize.width / config::gamePixelSize.width / 2 - 1, 0);
-	this->processingFigures[1].setPosition((2 * config::gameFieldSize.width + config::infoGroundSize.width) /
-		(2 * config::gamePixelSize.width), 4);
-}
-
-// delete before relize
-void ClassicMode::outputGameField(void)
-{
-	const int gameFieldHeight = this->gameField.size();
-	const int gameFieldWidth = this->gameField[0].size();
-	for (int i = 0; i < gameFieldHeight; i++)
-	{
-		int drawnPixelsInLine = 0;
-		for (int j = 0; j < gameFieldWidth; j++)
-		{
-			std::cout << gameField[i][j] << "\t";
-		}
-		std::cout << std::endl;
-	}
-	std::cout << "\n\n";
-}
-
-// return indexes of filled lines
+// push y coord of filled line to filledLines vector
+// 
+// filledLine - there is contain lines that is full
 //
 void ClassicMode::getFilledLinesVector(std::vector<int>& filledLines)
 {
@@ -466,4 +431,36 @@ void ClassicMode::destroyLines(std::vector<int> filledLines)
 			swap(this->gameField[coordY], this->gameField[coordY - 1]);
 		}
 	}
+}
+
+// min - min number
+// max number
+// 
+// return random number from min to max included
+int ClassicMode::random(int min, int max)
+{
+	std::random_device rd;
+	std::mt19937 generator(rd());
+	std::uniform_int_distribution<> range(min, max);
+
+	return range(generator);
+}
+
+// display game field in console
+// delete before relize
+//
+void ClassicMode::outputGameField(void)
+{
+	const int gameFieldHeight = this->gameField.size();
+	const int gameFieldWidth = this->gameField[0].size();
+	for (int i = 0; i < gameFieldHeight; i++)
+	{
+		int drawnPixelsInLine = 0;
+		for (int j = 0; j < gameFieldWidth; j++)
+		{
+			std::cout << gameField[i][j] << "\t";
+		}
+		std::cout << std::endl;
+	}
+	std::cout << "\n\n";
 }

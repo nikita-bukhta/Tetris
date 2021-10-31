@@ -54,6 +54,7 @@ public:
 	void draw(sf::RenderWindow& window);
 	bool rotate(bool clockwise);
 	bool move(const int moveXBy, const int moveYBy);
+	void setPosition(const int coordX, const int coordY);
 	void displayCoord(void);
 
 	int getPixelCount(void);

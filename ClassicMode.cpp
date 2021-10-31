@@ -121,10 +121,14 @@ ClassicMode::~ClassicMode(void)
 int ClassicMode::startGame(void)
 {
 	Figure figure = processingFigures[0];
+	Figure nextFigure = this->processingFigures[1];
 	// move to center of the screen
 	// we divide width of game fild by width of pixelSize to know how many pixels we can fit into.
 	// divide by 2 to find center of game field and minus 1 to move left
-	figure.move(config::gameFieldSize.width / config::gamePixelSize.width / 2 - 1, 0);
+	figure.setPosition(config::gameFieldSize.width / config::gamePixelSize.width / 2 - 1, 0);
+
+	nextFigure.setPosition((2 * config::gameFieldSize.width + config::infoGroundSize.width) /
+		(2 * config::gamePixelSize.width), 4);
 
 	sf::Clock timer;  // start timer;
 	while (window.isOpen())
@@ -195,6 +199,7 @@ int ClassicMode::startGame(void)
 		window.draw(this->infoGroundSprite);
 		this->drawOldFigures();
 		figure.draw(window);
+		nextFigure.draw(window);
 
 		window.display();
 	}
@@ -392,7 +397,8 @@ void ClassicMode::createNewFigure(Figure& figure)
 	// move to center of the screen
 	// we divide width of game fild by width of pixelSize to know how many pixels we can fit into.
 	// divide by 2 to find center of game field and minus 1 to move left
-	figure.move(config::gameFieldSize.width / config::gamePixelSize.width / 2 - 1, 0);
+	figure.setPosition(config::gameFieldSize.width / config::gamePixelSize.width / 2 - 1, 0);
+	this->processingFigures[1].setPosition(config::gameFieldSize.width + config::infoGroundSize.width / 2, 3);
 }
 
 // delete before relize

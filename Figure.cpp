@@ -5,6 +5,10 @@
 #include "Figure.h"
 #include "config.h"
 
+// TODO: draw x by their coordinate on field, not by cells 16x16
+//
+
+
 // constructor is making figure texture
 // 
 // sprite - pixel texture of our figure
@@ -235,6 +239,23 @@ bool Figure::move(const int moveXBy, const int moveYBy)
 	}
 
 	return true;
+}
+
+// put figure to this position
+// 
+// coordX - position by x
+// coordY - position by y
+//
+void Figure::setPosition(const int coordX, const int coordY)
+{
+	const int moveXBy = coordX - this->pixelsCoord[0].coordX;
+	const int moveYBy = coordY - this->pixelsCoord[0].coordY;
+
+	for (int i = 0; i < pixelCount; i++)
+	{
+		this->pixelsCoord[i].coordX += moveXBy;
+		this->pixelsCoord[i].coordY += moveYBy;
+	}
 }
 
 // output current coordinates of figure on console

@@ -31,13 +31,13 @@ private:
 	std::vector<Figure*> figuresVector;		// there are contain all figures
 	std::vector<Figure> processingFigures;	// there are figures, that displaing on the screen (current and next)
 
-	void bindingKeys(const int pressedKey, Figure& figure);
+	void bindingKeys(const int pressedKey);
 	int random(int min, int max);
-	void setNextFigure(Figure& figure);
-	void setCoordToGamefield(Figure& figure);
+	void setNextFigure(void);
+	void setCoordToGamefield(void);
 	void drawOldFigures(void);
-	bool thereIsEmpty(Figure& figure);
-	void createNewFigure(Figure& figure);
+	bool thereIsEmpty(void);
+	void createNewFigure(void);
 	void getFilledLinesVector(std::vector<int>& filledLines);
 	void destroyLines(std::vector<int> filledLines);
 

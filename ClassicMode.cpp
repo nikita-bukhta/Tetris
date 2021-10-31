@@ -16,7 +16,7 @@
 ClassicMode::ClassicMode(void)
 {
 	// create game window
-	this->window.create(sf::VideoMode(config::gameFieldSize.width, config::gameFieldSize.height),
+	this->window.create(sf::VideoMode(config::mainWindowSize.width, config::mainWindowSize.height),
 		"Tetris", sf::Style::Default);
 
 	// ---------------------------filling vectors with figures---------------------------- //
@@ -77,9 +77,22 @@ ClassicMode::ClassicMode(void)
 		// initialized vector with empty pixels
 		for (int j = 0; j < gameFieldWidth; j++)
 		{
-			gameField[i][j] = FigureType::Empty;
+			this->gameField[i][j] = FigureType::Empty;
 		}
 	}
+
+	// ---------------------------set information ground---------------------------- //
+
+	if (!this->infoGroundTexture.loadFromFile("img/information ground.png"))
+	{
+		std::cout << "Frame's texture wasn't loaded! Mb is not exist" << std::endl;
+	}
+	this->infoGroundTexture.setSmooth(true);
+	sf::Vector2u infoGroundTextureSize = this->infoGroundTexture.getSize();
+	this->infoGroundSprite.setTexture(this->infoGroundTexture);
+	this->infoGroundSprite.setScale((float)config::infoGroundSize.width / (float)infoGroundTextureSize.x,
+		(float)config::infoGroundSize.height / (float)infoGroundTextureSize.y);
+	this->infoGroundSprite.move(config::gameFieldSize.width, 0);
 
 	// ---------------------------game over---------------------------- //
 
@@ -179,6 +192,7 @@ int ClassicMode::startGame(void)
 		}
 
 		window.draw(this->gameFieldSprite);
+		window.draw(this->infoGroundSprite);
 		this->drawOldFigures();
 		figure.draw(window);
 

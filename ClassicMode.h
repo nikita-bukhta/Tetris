@@ -21,6 +21,9 @@ private:
 	sf::Texture gameFieldTexture;			// there is contain game field texture
 	sf::Sprite gameFieldSprite;				// there is contain game field sprite
 
+	sf::Texture infoGroundTexture;			// there is contain info ground texture
+	sf::Sprite infoGroundSprite;			// I think you understand
+
 	sf::Texture gameOverTexture;			// there is game over img
 	sf::Sprite gameOverSprite;				// and sprite
 

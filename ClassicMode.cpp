@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <random>	
+#include <string>
 
 #include "ClassicMode.h"
 #include "Figure.h"
@@ -94,6 +95,19 @@ ClassicMode::ClassicMode(void)
 		(float)config::infoGroundSize.height / (float)infoGroundTextureSize.y);
 	this->infoGroundSprite.move(config::gameFieldSize.width, 0);
 
+	// ---------------------------set score---------------------------- //
+	
+	this->totalScore = 0;
+
+	if (!this->scoreFont.loadFromFile("font/nexa-script.ttf"))
+	{
+		std::cout << "Font wasn't loaded! Mb is not exist" << std::endl;
+	}
+	this->scoreText.setFont(this->scoreFont);
+	this->scoreText.setString(std::to_string(totalScore));
+	this->scoreText.setPosition(config::gameFieldSize.width + (config::infoGroundSize.width -
+		std::to_string(totalScore).size()) / 2, config::gameFieldSize.height * 2.0f / 3.5f);
+
 	// ---------------------------game over---------------------------- //
 
 	// download game over texture
@@ -165,7 +179,8 @@ int ClassicMode::startGame(void)
 				// destroy filled lines
 				std::vector<int> filledLines;
 				this->getFilledLinesVector(filledLines);
-				destroyLines(filledLines);
+				this->destroyLines(filledLines);
+				this->updateScore(filledLines.size());
 			}
 			// if we found figure under our figure
 			else if (!thereIsEmpty())
@@ -176,7 +191,8 @@ int ClassicMode::startGame(void)
 				// destroy filled lines
 				std::vector<int> filledLines;
 				this->getFilledLinesVector(filledLines);
-				destroyLines(filledLines);
+				this->destroyLines(filledLines);
+				this->updateScore(filledLines.size());
 			}
 
 			timer.restart();
@@ -198,6 +214,7 @@ int ClassicMode::startGame(void)
 		this->drawOldFigures();
 		this->processingFigures[0].draw(window);
 		this->processingFigures[1].draw(window);
+		window.draw(this->scoreText);
 
 		window.display();
 	}
@@ -244,7 +261,8 @@ void ClassicMode::bindingKeys(const int pressedKey)
 			// destroy filled lines
 			std::vector<int> filledLines;
 			this->getFilledLinesVector(filledLines);
-			destroyLines(filledLines);
+			this->destroyLines(filledLines);
+			this->updateScore(filledLines.size());
 		}
 		// if we found figure under our figure
 		else if (!thereIsEmpty())
@@ -255,7 +273,8 @@ void ClassicMode::bindingKeys(const int pressedKey)
 			// destroy filled lines
 			std::vector<int> filledLines;
 			this->getFilledLinesVector(filledLines);
-			destroyLines(filledLines);
+			this->destroyLines(filledLines);
+			this->updateScore(filledLines.size());
 			if (filledLines.size() > 0)
 				this->outputGameField();
 		}
@@ -337,6 +356,18 @@ void ClassicMode::drawOldFigures(void)
 			}
 		}
 	}
+}
+
+void ClassicMode::updateScore(const int destroyedLinesCount)
+{
+	if (destroyedLinesCount <= 0)
+	{
+		return;
+	}
+	this->totalScore += 125 * destroyedLinesCount - 25;
+	this->scoreText.setString(std::to_string(totalScore));
+	this->scoreText.setPosition(config::gameFieldSize.width + (config::infoGroundSize.width -
+		std::to_string(totalScore).size()) / 2, config::gameFieldSize.height * 2.0f / 3.5f);
 }
 
 // set game frame with new figure

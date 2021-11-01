@@ -89,4 +89,3 @@ private:
 
 	FigureType figureType;
 };
-

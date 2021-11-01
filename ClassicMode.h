@@ -27,6 +27,10 @@ private:
 	sf::Texture gameOverTexture;			// there is game over img
 	sf::Sprite gameOverSprite;				// and sprite
 
+	sf::Font scoreFont;						// score font :D
+	sf::Text scoreText;						// so...
+	int totalScore;							// how many score you have
+
 	sf::RenderWindow window;				// main window
 	std::vector<Figure*> figuresVector;		// there are contain all figures
 	std::vector<Figure> processingFigures;	// there are figures, that displaing on the screen (current and next)
@@ -36,6 +40,7 @@ private:
 	// work with figure
 	void createNewFigure(void);
 	void drawOldFigures(void);
+	void updateScore(const int destroyedLinesCount);
 
 	// work with game field
 	void setCoordToGamefield(void);
@@ -49,4 +54,3 @@ private:
 	// useful methods but delete before reliaze
 	void outputGameField(void);
 };
-

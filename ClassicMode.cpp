@@ -93,7 +93,7 @@ ClassicMode::ClassicMode(void)
 	this->infoGroundSprite.setTexture(this->infoGroundTexture);
 	this->infoGroundSprite.setScale((float)config::infoGroundSize.width / (float)infoGroundTextureSize.x,
 		(float)config::infoGroundSize.height / (float)infoGroundTextureSize.y);
-	this->infoGroundSprite.move(config::gameFieldSize.width, 0);
+	this->infoGroundSprite.move((float)config::gameFieldSize.width, 0.0f);
 
 	// ---------------------------set score---------------------------- //
 	
@@ -106,8 +106,8 @@ ClassicMode::ClassicMode(void)
 	this->scoreText.setFont(this->scoreFont);
 	this->scoreText.setString(std::to_string(totalScore));
 	this->scoreText.setCharacterSize(config::scoreFontSize);
-	this->scoreText.setPosition(config::gameFieldSize.width + (config::infoGroundSize.width +
-		(std::to_string(totalScore).size() * config::scoreFontSize)) / 2,
+	this->scoreText.setPosition((float)config::gameFieldSize.width + (config::infoGroundSize.width +
+		(std::to_string(totalScore).size() * config::scoreFontSize)) / 2.0f,
 		config::gameFieldSize.height * 2.0f / 3.4f);
 
 	// ---------------------------game over---------------------------- //

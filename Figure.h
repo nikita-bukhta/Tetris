@@ -60,7 +60,7 @@ public:
 
 	// control figure
 	bool move(const int moveXBy, const int moveYBy);
-	bool rotate(bool clockwise);
+	bool rotate(const double rotationDegree);
 
 	// ----- getters and setters ----- //
 

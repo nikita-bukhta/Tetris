@@ -106,8 +106,8 @@ ClassicMode::ClassicMode(void)
 	this->scoreText.setFont(this->scoreFont);
 	this->scoreText.setString(std::to_string(totalScore));
 	this->scoreText.setCharacterSize(config::scoreFontSize);
-	this->scoreText.setPosition(config::gameFieldSize.width + (config::infoGroundSize.width -
-		std::to_string(totalScore).size() * config::scoreFontSize) / 2, 
+	this->scoreText.setPosition(config::gameFieldSize.width + (config::infoGroundSize.width +
+		(std::to_string(totalScore).size() * config::scoreFontSize)) / 2,
 		config::gameFieldSize.height * 2.0f / 3.4f);
 
 	// ---------------------------game over---------------------------- //
@@ -204,11 +204,11 @@ int ClassicMode::startGame(void)
 
 		if (!this->thereIsEmpty())
 		{
-			window.draw(this->gameOverSprite);
-			window.display();
-			timer.restart();
-			while (timer.getElapsedTime().asSeconds() < 5.0) {};
-			break;
+			//window.draw(this->gameOverSprite);
+			//window.display();
+			//timer.restart();
+			//while (timer.getElapsedTime().asSeconds() < 5.0) {};
+			//break;
 		}
 
 		window.draw(this->gameFieldSprite);
@@ -286,10 +286,38 @@ void ClassicMode::bindingKeys(const int pressedKey)
 	case sf::Keyboard::Up:
 	case sf::Keyboard::W:
 	case sf::Keyboard::Space:
-		//figure.rotate(true);
-		if (this->processingFigures[0].rotate(true) && !thereIsEmpty())
+		Point onePixelCoord = this->processingFigures[0].getCoord()[0];
+		// try to rotate
+		while(!this->processingFigures[0].rotate(90))
 		{
-			this->processingFigures[0].rotate(false);
+			// if figure is left
+			if (onePixelCoord.coordX < config::gameFieldSize.width / config::gamePixelSize.width / 2)
+			{
+				this->processingFigures[0].move(1, 0);
+				// if there is  busy
+				if (!this->thereIsEmpty())
+				{
+					this->processingFigures[0].move(-1, 0);
+					break;
+				}
+			}
+			// if figure is right
+			else
+			{
+				this->processingFigures[0].move(-1, 0);
+				// if there is  busy
+				if (!this->thereIsEmpty())
+				{
+					this->processingFigures[0].move(1, 0);
+					break;
+				}
+			}
+		}
+
+		// if there is  busy
+		if (!this->thereIsEmpty())
+		{
+			this->processingFigures[0].rotate(270);
 		}
 		break;
 	}

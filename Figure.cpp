@@ -1,6 +1,7 @@
-#pragma once
+﻿#pragma once
 
 #include <iostream>
+#include <cmath>
 
 #include "Figure.h"
 #include "config.h"
@@ -74,18 +75,22 @@ Figure Figure::operator= (const Figure& other)
 bool Figure::move(const int moveXBy, const int moveYBy)
 {
 	bool moveIsSuccessful = true;
+	// copy of our figure. 
+	// We move this object and then copy our copy to our figure
+	// if is possible
+	Figure figureCopy = *this;
 	for (int i = 0; i < pixelCount; i++)
 	{
-		this->pixelsCoord[i].coordX += moveXBy;
-		this->pixelsCoord[i].coordY += moveYBy;
+		figureCopy.pixelsCoord[i].coordX += moveXBy;
+		figureCopy.pixelsCoord[i].coordY += moveYBy;
 
 		// check if pixel in game grame
 		// [0; 0] - gameFieldSize - coordinates from to of game frame
-		bool coordXIsRight = this->pixelsCoord[i].coordX >= 0 &&
-			this->pixelsCoord[i].coordX <
+		bool coordXIsRight = figureCopy.pixelsCoord[i].coordX >= 0 &&
+			figureCopy.pixelsCoord[i].coordX <
 			(config::gameFieldSize.width / config::gamePixelSize.width);
-		bool coordYIsRight = this->pixelsCoord[i].coordY >= 0 &&
-			this->pixelsCoord[i].coordY <
+		bool coordYIsRight = figureCopy.pixelsCoord[i].coordY >= 0 &&
+			figureCopy.pixelsCoord[i].coordY <
 			(config::gameFieldSize.height / config::gamePixelSize.height);
 
 		// if pixel is not in frame
@@ -93,21 +98,18 @@ bool Figure::move(const int moveXBy, const int moveYBy)
 		if (!(coordXIsRight && coordYIsRight))
 		{
 			moveIsSuccessful = false;
+			break;
 		}
 	}
 
-	// if movement is impossible, just roll back pixels
+	// if movement is impossible
 	if (!moveIsSuccessful)
 	{
-		// roll back figures
-		for (int i = 0; i < pixelCount; i++)
-		{
-			this->pixelsCoord[i].coordX -= moveXBy;
-			this->pixelsCoord[i].coordY -= moveYBy;
-		}
-
 		return false;
 	}
+	
+	// copy back
+	*this = figureCopy;
 
 	return true;
 }
@@ -116,13 +118,12 @@ bool Figure::move(const int moveXBy, const int moveYBy)
 // 
 // if that isn't possible, we roll back our figure to start condition
 // 
-// clockwise - true if rotate by clockwise
-// clockwise - false if rotate counter-clockwise
+// rotationDegree - degree we need to rotate
 // 
 // return true if rotation successesful
 // return false if not
 //
-bool Figure::rotate(bool clockwise)
+bool Figure::rotate(const double rotationDegree)
 {
 	if (!this->canRotate)
 	{
@@ -130,98 +131,53 @@ bool Figure::rotate(bool clockwise)
 	}
 
 	bool moveIsSuccessful = true;
+	Figure figureCopy = *this;
 
-	Point rotationCenter = pixelsCoord[1];
-	if (clockwise)
+	Point rotationCenter = figureCopy.pixelsCoord[1];
+	Point& p_0 = rotationCenter;
+	const double radian = rotationDegree * config::PI / 180.0;
+	const float rotationSin = (float)sin(radian);
+	const float rotationCos = (float)cos(radian);
+	for (int i = 0; i < pixelCount; i++)
 	{
-		for (int i = 0; i < pixelCount; i++)
+		// formula for rotation
+		//X = x_0 + (x − x_0) * cos⁡(a) −(y − y_0) * sin⁡(a);
+		//Y = y_0 + (y − y_0) * cos⁡(a) + (x − x_0) * sin⁡(a);
+		// where:
+		//	x and y		- current pixel coord
+		//	x_0 and y_0 - rotation center
+		//	a - radian count
+		int& x = figureCopy.pixelsCoord[i].coordX;
+		int& y = figureCopy.pixelsCoord[i].coordY;
+		Point currentPixel = { x, y };
+		x = rotationCenter.coordX + (currentPixel.coordX - rotationCenter.coordX) * rotationCos - (currentPixel.coordY - rotationCenter.coordY) * rotationSin;
+		y = rotationCenter.coordY + (currentPixel.coordY - rotationCenter.coordY) * rotationCos + (currentPixel.coordX - rotationCenter.coordX) * rotationSin;
+
+		// check if pixel in game grame
+		// [0; 0] - gameFieldSize - coordinates from to of game frame
+		bool coordXIsRight = figureCopy.pixelsCoord[i].coordX >= 0 &&
+			figureCopy.pixelsCoord[i].coordX <
+			(config::gameFieldSize.width / config::gamePixelSize.width);
+		bool coordYIsRight = figureCopy.pixelsCoord[i].coordY >= 0 &&
+			figureCopy.pixelsCoord[i].coordY <
+			(config::gameFieldSize.height / config::gamePixelSize.height);
+
+		// if pixel is not in frame
+		// we stop a loop
+		if (!(coordXIsRight && coordYIsRight))
 		{
-			Point tempPoint;
-			tempPoint.coordX = this->pixelsCoord[i].coordY - rotationCenter.coordY;
-			tempPoint.coordY = this->pixelsCoord[i].coordX - rotationCenter.coordX;
-
-			pixelsCoord[i].coordX = rotationCenter.coordX - tempPoint.coordX;
-			pixelsCoord[i].coordY = rotationCenter.coordY + tempPoint.coordY;
-
-			// check if pixel in game grame
-			// [0; 0] - gameFieldSize - coordinates from to of game frame
-			bool coordXIsRight = this->pixelsCoord[i].coordX >= 0 &&
-				this->pixelsCoord[i].coordX <
-				(config::gameFieldSize.width / config::gamePixelSize.width);
-			bool coordYIsRight = this->pixelsCoord[i].coordY >= 0 &&
-				this->pixelsCoord[i].coordY <
-				(config::gameFieldSize.height / config::gamePixelSize.height);
-
-			// if pixel is not in frame
-			// we stop a loop
-			if (!(coordXIsRight && coordYIsRight))
-			{
-				moveIsSuccessful = false;
-			}
-		}
-
-		// if movement is impossible, just roll back pixels
-		if (!moveIsSuccessful)
-		{
-			// roll back figures
-			for (int i = 0; i < pixelCount; i++)
-			{
-				Point tempPoint;
-				tempPoint.coordX = this->pixelsCoord[i].coordY - rotationCenter.coordY;
-				tempPoint.coordY = this->pixelsCoord[i].coordX - rotationCenter.coordX;
-
-				pixelsCoord[i].coordX = rotationCenter.coordX + tempPoint.coordX;
-				pixelsCoord[i].coordY = rotationCenter.coordY - tempPoint.coordY;
-			}
-
-			return false;
+			moveIsSuccessful = false;
+			break;
 		}
 	}
-	else
+
+	// if movement is impossible
+	if (!moveIsSuccessful)
 	{
-		for (int i = 0; i < pixelCount; i++)
-		{
-			Point tempPoint;
-			tempPoint.coordX = this->pixelsCoord[i].coordY - rotationCenter.coordY;
-			tempPoint.coordY = this->pixelsCoord[i].coordX - rotationCenter.coordX;
-
-			pixelsCoord[i].coordX = rotationCenter.coordX + tempPoint.coordX;
-			pixelsCoord[i].coordY = rotationCenter.coordY - tempPoint.coordY;
-
-			// check if pixel in game grame
-			// [0; 0] - gameFieldSize - coordinates from to of game frame
-			bool coordXIsRight = this->pixelsCoord[i].coordX >= 0 &&
-				this->pixelsCoord[i].coordX <
-				(config::gameFieldSize.width / config::gamePixelSize.width);
-			bool coordYIsRight = this->pixelsCoord[i].coordY >= 0 &&
-				this->pixelsCoord[i].coordY <
-				(config::gameFieldSize.height / config::gamePixelSize.height);
-
-			// if pixel is not in frame
-			// we stop a loop
-			if (!(coordXIsRight && coordYIsRight))
-			{
-				moveIsSuccessful = false;
-			}
-		}
-
-		// if movement is impossible, just roll back pixels
-		if (!moveIsSuccessful)
-		{
-			// roll back figures
-			for (int i = 0; i < pixelCount; i++)
-			{
-				Point tempPoint;
-				tempPoint.coordX = this->pixelsCoord[i].coordY - rotationCenter.coordY;
-				tempPoint.coordY = this->pixelsCoord[i].coordX - rotationCenter.coordX;
-
-				pixelsCoord[i].coordX = rotationCenter.coordX - tempPoint.coordX;
-				pixelsCoord[i].coordY = rotationCenter.coordY + tempPoint.coordY;
-			}
-
-			return false;
-		}
+		return false;
 	}
+
+	*this = figureCopy;
 
 	return true;
 }

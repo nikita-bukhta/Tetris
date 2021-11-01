@@ -37,4 +37,5 @@ namespace config
 	};
 
 	const int scoreFontSize = 20;
+	const double PI = 3.14159265;
 }

@@ -204,11 +204,11 @@ int ClassicMode::startGame(void)
 
 		if (!this->thereIsEmpty())
 		{
-			//window.draw(this->gameOverSprite);
-			//window.display();
-			//timer.restart();
-			//while (timer.getElapsedTime().asSeconds() < 5.0) {};
-			//break;
+			window.draw(this->gameOverSprite);
+			window.display();
+			timer.restart();
+			while (timer.getElapsedTime().asSeconds() < 2.0) {};
+			break;
 		}
 
 		window.draw(this->gameFieldSprite);
@@ -277,8 +277,6 @@ void ClassicMode::bindingKeys(const int pressedKey)
 			this->getFilledLinesVector(filledLines);
 			this->destroyLines(filledLines);
 			this->updateScore(filledLines.size());
-			if (filledLines.size() > 0)
-				this->outputGameField();
 		}
 		break;
 

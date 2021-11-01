@@ -23,4 +23,19 @@ namespace config
 		gamePixelSize.width * 10,
 		gamePixelSize.height * 20
 	};
+
+	const PictureSize infoGroundSize =
+	{
+		gamePixelSize.width * 6,
+		gameFieldSize.height
+	};
+
+	const PictureSize mainWindowSize =
+	{
+		infoGroundSize.width + gameFieldSize.width,
+		gameFieldSize.height
+	};
+
+	const int scoreFontSize = 20;
+	const double PI = 3.14159265;
 }

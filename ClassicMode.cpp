@@ -2,16 +2,22 @@
 
 #include <iostream>
 #include <random>	
+#include <string>
 
 #include "ClassicMode.h"
 #include "Figure.h"
 #include "config.h"
 
+// TODO:	show next figure
+//			show total score (more lines you destroy simultaneously, more score you get)
+//			add boosting depending from score
+//
+
 // create main window and figures we use in game
 ClassicMode::ClassicMode(void)
 {
 	// create game window
-	this->window.create(sf::VideoMode(config::gameFieldSize.width, config::gameFieldSize.height),
+	this->window.create(sf::VideoMode(config::mainWindowSize.width, config::mainWindowSize.height),
 		"Tetris", sf::Style::Default);
 
 	// ---------------------------filling vectors with figures---------------------------- //
@@ -72,9 +78,37 @@ ClassicMode::ClassicMode(void)
 		// initialized vector with empty pixels
 		for (int j = 0; j < gameFieldWidth; j++)
 		{
-			gameField[i][j] = FigureType::Empty;
+			this->gameField[i][j] = FigureType::Empty;
 		}
 	}
+
+	// ---------------------------set information ground---------------------------- //
+
+	if (!this->infoGroundTexture.loadFromFile("img/information ground.png"))
+	{
+		std::cout << "Frame's texture wasn't loaded! Mb is not exist" << std::endl;
+	}
+	this->infoGroundTexture.setSmooth(true);
+	sf::Vector2u infoGroundTextureSize = this->infoGroundTexture.getSize();
+	this->infoGroundSprite.setTexture(this->infoGroundTexture);
+	this->infoGroundSprite.setScale((float)config::infoGroundSize.width / (float)infoGroundTextureSize.x,
+		(float)config::infoGroundSize.height / (float)infoGroundTextureSize.y);
+	this->infoGroundSprite.move(config::gameFieldSize.width, 0);
+
+	// ---------------------------set score---------------------------- //
+	
+	this->totalScore = 0;
+
+	if (!this->scoreFont.loadFromFile("font/nexa-script.ttf"))
+	{
+		std::cout << "Font wasn't loaded! Mb is not exist" << std::endl;
+	}
+	this->scoreText.setFont(this->scoreFont);
+	this->scoreText.setString(std::to_string(totalScore));
+	this->scoreText.setCharacterSize(config::scoreFontSize);
+	this->scoreText.setPosition(config::gameFieldSize.width + (config::infoGroundSize.width +
+		(std::to_string(totalScore).size() * config::scoreFontSize)) / 2,
+		config::gameFieldSize.height * 2.0f / 3.4f);
 
 	// ---------------------------game over---------------------------- //
 
@@ -102,11 +136,13 @@ ClassicMode::~ClassicMode(void)
 
 int ClassicMode::startGame(void)
 {
-	Figure figure = processingFigures[0];
 	// move to center of the screen
 	// we divide width of game fild by width of pixelSize to know how many pixels we can fit into.
 	// divide by 2 to find center of game field and minus 1 to move left
-	figure.move(config::gameFieldSize.width / config::gamePixelSize.width / 2 - 1, 0);
+	this->processingFigures[0].setPosition(config::gameFieldSize.width / config::gamePixelSize.width / 2 - 1, 0);
+
+	this->processingFigures[1].setPosition((2 * config::gameFieldSize.width + config::infoGroundSize.width) /
+		(2 * config::gamePixelSize.width), 4);
 
 	sf::Clock timer;  // start timer;
 	while (window.isOpen())
@@ -123,35 +159,42 @@ int ClassicMode::startGame(void)
 
 				// user has pressed button
 			case sf::Event::KeyPressed:
-				this->bindingKeys(event.key.code, figure);
+				this->bindingKeys(event.key.code);
 
 			}
 		}
 
 		// if time left, we move down figure by 1
 		// and restart timer
+		// 
+		// TODO:	add boosting time that equal with count of score
+		//			more score you have, bigger figure falling speed
 		if (timer.getElapsedTime().asSeconds() >= 1.0)
 		{
 			// if we are in the button of game field
-			if (!figure.move(0, 1))
+			// TODO: fix time we need waiting to control new figure
+			//
+			if (!this->processingFigures[0].move(0, 1))
 			{
-				this->createNewFigure(figure);
+				this->createNewFigure();
 
 				// destroy filled lines
 				std::vector<int> filledLines;
 				this->getFilledLinesVector(filledLines);
-				destroyLines(filledLines);
+				this->destroyLines(filledLines);
+				this->updateScore(filledLines.size());
 			}
 			// if we found figure under our figure
-			else if (!thereIsEmpty(figure))
+			else if (!thereIsEmpty())
 			{
-				figure.move(0, -1);
-				this->createNewFigure(figure);
+				this->processingFigures[0].move(0, -1);
+				this->createNewFigure();
 
 				// destroy filled lines
 				std::vector<int> filledLines;
 				this->getFilledLinesVector(filledLines);
-				destroyLines(filledLines);
+				this->destroyLines(filledLines);
+				this->updateScore(filledLines.size());
 			}
 
 			timer.restart();
@@ -159,18 +202,21 @@ int ClassicMode::startGame(void)
 
 		window.clear(sf::Color::White);
 
-		if (!this->thereIsEmpty(figure))
+		if (!this->thereIsEmpty())
 		{
 			window.draw(this->gameOverSprite);
 			window.display();
 			timer.restart();
-			while (timer.getElapsedTime().asSeconds() < 5.0) {};
+			while (timer.getElapsedTime().asSeconds() < 2.0) {};
 			break;
 		}
 
 		window.draw(this->gameFieldSprite);
+		window.draw(this->infoGroundSprite);
 		this->drawOldFigures();
-		figure.draw(window);
+		this->processingFigures[0].draw(window);
+		this->processingFigures[1].draw(window);
+		window.draw(this->scoreText);
 
 		window.display();
 	}
@@ -182,27 +228,27 @@ int ClassicMode::startGame(void)
 // 
 // pressed key - button you have pressed
 // figure - current figure
-void ClassicMode::bindingKeys(const int pressedKey, Figure& figure)
+void ClassicMode::bindingKeys(const int pressedKey)
 {
 	switch (pressedKey)
 	{
 		// move left
 	case sf::Keyboard::Left:
 	case sf::Keyboard::A:
-		figure.move(-1, 0);
-		if (!thereIsEmpty(figure))
+		this->processingFigures[0].move(-1, 0);
+		if (!thereIsEmpty())
 		{
-			figure.move(1, 0);
+			this->processingFigures[0].move(1, 0);
 		}
 		break;
 
 		// move right
 	case sf::Keyboard::Right:
 	case sf::Keyboard::D:
-		figure.move(1, 0);
-		if (!thereIsEmpty(figure))
+		this->processingFigures[0].move(1, 0);
+		if (!thereIsEmpty())
 		{
-			figure.move(-1, 0);
+			this->processingFigures[0].move(-1, 0);
 		}
 		break;
 
@@ -210,27 +256,27 @@ void ClassicMode::bindingKeys(const int pressedKey, Figure& figure)
 	case sf::Keyboard::Down:
 	case sf::Keyboard::S:
 		// if we are in the button of game field
-		if (!figure.move(0, 1))
+		if (!this->processingFigures[0].move(0, 1))
 		{
-			this->createNewFigure(figure);
+			this->createNewFigure();
 
 			// destroy filled lines
 			std::vector<int> filledLines;
 			this->getFilledLinesVector(filledLines);
-			destroyLines(filledLines);
+			this->destroyLines(filledLines);
+			this->updateScore(filledLines.size());
 		}
 		// if we found figure under our figure
-		else if (!thereIsEmpty(figure))
+		else if (!thereIsEmpty())
 		{
-			figure.move(0, -1);
-			this->createNewFigure(figure);
+			this->processingFigures[0].move(0, -1);
+			this->createNewFigure();
 
 			// destroy filled lines
 			std::vector<int> filledLines;
 			this->getFilledLinesVector(filledLines);
-			destroyLines(filledLines);
-			if (filledLines.size() > 0)
-				this->outputGameField();
+			this->destroyLines(filledLines);
+			this->updateScore(filledLines.size());
 		}
 		break;
 
@@ -238,63 +284,67 @@ void ClassicMode::bindingKeys(const int pressedKey, Figure& figure)
 	case sf::Keyboard::Up:
 	case sf::Keyboard::W:
 	case sf::Keyboard::Space:
-		//figure.rotate(true);
-		if (figure.rotate(true) && !thereIsEmpty(figure))
+		Point onePixelCoord = this->processingFigures[0].getCoord()[0];
+		// try to rotate
+		while(!this->processingFigures[0].rotate(90))
 		{
-			figure.rotate(false);
+			// if figure is left
+			if (onePixelCoord.coordX < config::gameFieldSize.width / config::gamePixelSize.width / 2)
+			{
+				this->processingFigures[0].move(1, 0);
+				// if there is  busy
+				if (!this->thereIsEmpty())
+				{
+					this->processingFigures[0].move(-1, 0);
+					break;
+				}
+			}
+			// if figure is right
+			else
+			{
+				this->processingFigures[0].move(-1, 0);
+				// if there is  busy
+				if (!this->thereIsEmpty())
+				{
+					this->processingFigures[0].move(1, 0);
+					break;
+				}
+			}
+		}
+
+		// if there is  busy
+		if (!this->thereIsEmpty())
+		{
+			this->processingFigures[0].rotate(270);
 		}
 		break;
 	}
 }
 
-// min - min number
-// max number
-// 
-// return random number from min to max included
-int ClassicMode::random(int min, int max)
-{
-	std::random_device rd;
-	std::mt19937 generator(rd());
-	std::uniform_int_distribution<> range(min, max);
-
-	return range(generator);
-}
-
-// take the next figure from queue
-// 
-// figure - main plaing figure we are controling
+// next figure is becomign current
+// and set next figure
 //
-void ClassicMode::setNextFigure(Figure& figure)
+void ClassicMode::createNewFigure(void)
 {
+	this->setCoordToGamefield();
+
 	// the next figure is becoming current
 	this->processingFigures[0] = this->processingFigures[1];
 	// set the next figure after current
-	this->processingFigures[1] = *(this->figuresVector[this->random(0, 
+	this->processingFigures[1] = *(this->figuresVector[this->random(0,
 		(this->figuresVector.size() - 1))]
 		);
-	
-	// copy current figure in figure object
-	figure = this->processingFigures[0];
+
+	// move to center of the screen
+	// we divide width of game fild by width of pixelSize to know how many pixels we can fit into.
+	// divide by 2 to find center of game field and minus 1 to move left
+	this->processingFigures[0].setPosition(config::gameFieldSize.width / config::gamePixelSize.width / 2 - 1, 0);
+	this->processingFigures[1].setPosition((2 * config::gameFieldSize.width + config::infoGroundSize.width) /
+		(2 * config::gamePixelSize.width), 4);
 }
 
-// set game frame with new figure
-// this method need to display old figure on the screen
-// number in vector is texture number
-// 
-// figure - figure we write off in game field
+// draw all pixels, which we put
 //
-void ClassicMode::setCoordToGamefield(Figure& figure)
-{
-	std::vector<Point> figureCoord = figure.getCoord();
-	const FigureType textureType = figure.getFigureType();
-
-	const int pixelCount = figureCoord.size();
-	for (int i = 0; i < pixelCount; i++)
-	{
-		this->gameField[figureCoord[i].coordY][figureCoord[i].coordX] = textureType;
-	}
-}
-
 void ClassicMode::drawOldFigures(void)
 {
 	const int gameFieldHeight = this->gameField.size();
@@ -332,24 +382,47 @@ void ClassicMode::drawOldFigures(void)
 					window.draw(sprite);
 				}
 			}
-			else
-			{
-				//window.draw(emptySprite);
-			}
 		}
+	}
+}
+
+void ClassicMode::updateScore(const int destroyedLinesCount)
+{
+	if (destroyedLinesCount <= 0)
+	{
+		return;
+	}
+	this->totalScore += 125 * destroyedLinesCount - 25;
+	this->scoreText.setString(std::to_string(totalScore));
+	this->scoreText.setPosition(config::gameFieldSize.width + (config::infoGroundSize.width -
+		(std::to_string(totalScore).size() * config::scoreFontSize)),
+		config::gameFieldSize.height * 2.0f / 3.4f);
+}
+
+// set game frame with new figure
+// this method need to display old figure on the screen
+// number in vector is texture number
+//
+void ClassicMode::setCoordToGamefield(void)
+{
+	std::vector<Point> figureCoord = this->processingFigures[0].getCoord();
+	const FigureType textureType = this->processingFigures[0].getFigureType();
+
+	const int pixelCount = figureCoord.size();
+	for (int i = 0; i < pixelCount; i++)
+	{
+		this->gameField[figureCoord[i].coordY][figureCoord[i].coordX] = textureType;
 	}
 }
 
 // check if our figure have fallen on the not empty pixels
 // 
-// figure - current figure we move
-// 
 // return true - if pixels is not empty
 // return false - if pixels is empty
 //
-bool ClassicMode::thereIsEmpty(Figure& figure)
+bool ClassicMode::thereIsEmpty(void)
 {
-	std::vector<Point> figureCoord = figure.getCoord();
+	std::vector<Point> figureCoord = this->processingFigures[0].getCoord();
 
 	const int pixelCount = figureCoord.size();
 	for (int i = 0; i < pixelCount; i++)
@@ -364,35 +437,9 @@ bool ClassicMode::thereIsEmpty(Figure& figure)
 	return true;
 }
 
-void ClassicMode::createNewFigure(Figure& figure)
-{
-	this->setCoordToGamefield(figure);
-
-	this->setNextFigure(figure);
-	// move to center of the screen
-	// we divide width of game fild by width of pixelSize to know how many pixels we can fit into.
-	// divide by 2 to find center of game field and minus 1 to move left
-	figure.move(config::gameFieldSize.width / config::gamePixelSize.width / 2 - 1, 0);
-}
-
-// delete before relize
-void ClassicMode::outputGameField(void)
-{
-	const int gameFieldHeight = this->gameField.size();
-	const int gameFieldWidth = this->gameField[0].size();
-	for (int i = 0; i < gameFieldHeight; i++)
-	{
-		int drawnPixelsInLine = 0;
-		for (int j = 0; j < gameFieldWidth; j++)
-		{
-			std::cout << gameField[i][j] << "\t";
-		}
-		std::cout << std::endl;
-	}
-	std::cout << "\n\n";
-}
-
-// return indexes of filled lines
+// push y coord of filled line to filledLines vector
+// 
+// filledLine - there is contain lines that is full
 //
 void ClassicMode::getFilledLinesVector(std::vector<int>& filledLines)
 {
@@ -411,13 +458,6 @@ void ClassicMode::getFilledLinesVector(std::vector<int>& filledLines)
 				filledPixelsCount++;
 			}
 		}
-		//std::cout << filledPixelsCount << std::endl;
-
-		// if line is empty
-		//if (filledPixelsCount == 0)
-		//{
-		//	break;
-		//}
 		// if line is filled totally
 		if (filledPixelsCount == pixelsCountInLine)
 		{
@@ -451,4 +491,36 @@ void ClassicMode::destroyLines(std::vector<int> filledLines)
 			swap(this->gameField[coordY], this->gameField[coordY - 1]);
 		}
 	}
+}
+
+// min - min number
+// max number
+// 
+// return random number from min to max included
+int ClassicMode::random(int min, int max)
+{
+	std::random_device rd;
+	std::mt19937 generator(rd());
+	std::uniform_int_distribution<> range(min, max);
+
+	return range(generator);
+}
+
+// display game field in console
+// delete before relize
+//
+void ClassicMode::outputGameField(void)
+{
+	const int gameFieldHeight = this->gameField.size();
+	const int gameFieldWidth = this->gameField[0].size();
+	for (int i = 0; i < gameFieldHeight; i++)
+	{
+		int drawnPixelsInLine = 0;
+		for (int j = 0; j < gameFieldWidth; j++)
+		{
+			std::cout << gameField[i][j] << "\t";
+		}
+		std::cout << std::endl;
+	}
+	std::cout << "\n\n";
 }

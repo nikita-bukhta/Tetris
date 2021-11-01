@@ -35,4 +35,6 @@ namespace config
 		infoGroundSize.width + gameFieldSize.width,
 		gameFieldSize.height
 	};
+
+	const int scoreFontSize = 20;
 }

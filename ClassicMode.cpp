@@ -105,8 +105,10 @@ ClassicMode::ClassicMode(void)
 	}
 	this->scoreText.setFont(this->scoreFont);
 	this->scoreText.setString(std::to_string(totalScore));
+	this->scoreText.setCharacterSize(config::scoreFontSize);
 	this->scoreText.setPosition(config::gameFieldSize.width + (config::infoGroundSize.width -
-		std::to_string(totalScore).size()) / 2, config::gameFieldSize.height * 2.0f / 3.5f);
+		std::to_string(totalScore).size() * config::scoreFontSize) / 2, 
+		config::gameFieldSize.height * 2.0f / 3.4f);
 
 	// ---------------------------game over---------------------------- //
 
@@ -367,7 +369,8 @@ void ClassicMode::updateScore(const int destroyedLinesCount)
 	this->totalScore += 125 * destroyedLinesCount - 25;
 	this->scoreText.setString(std::to_string(totalScore));
 	this->scoreText.setPosition(config::gameFieldSize.width + (config::infoGroundSize.width -
-		std::to_string(totalScore).size()) / 2, config::gameFieldSize.height * 2.0f / 3.5f);
+		(std::to_string(totalScore).size() * config::scoreFontSize)),
+		config::gameFieldSize.height * 2.0f / 3.4f);
 }
 
 // set game frame with new figure

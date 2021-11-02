@@ -124,8 +124,8 @@ ClassicMode::ClassicMode(void)
 	this->gameOverSprite.setTexture(this->gameOverTexture);
 	sf::Vector2u imgSize = this->gameOverTexture.getSize();
 	// resize to our game field size
-	this->gameOverSprite.setScale((float)config::gameFieldSize.width / (float)imgSize.x,
-		(float)config::gameFieldSize.height / (float)imgSize.y);
+	this->gameOverSprite.setScale((float)config::mainWindowSize.width / (float)imgSize.x,
+		(float)config::mainWindowSize.height / (float)imgSize.y);
 }
 
 ClassicMode::~ClassicMode(void)

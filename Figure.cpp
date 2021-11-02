@@ -147,11 +147,13 @@ bool Figure::rotate(const double rotationDegree)
 		//	x and y		- current pixel coord
 		//	x_0 and y_0 - rotation center
 		//	a - radian count
-		int& x = figureCopy.pixelsCoord[i].coordX;
-		int& y = figureCopy.pixelsCoord[i].coordY;
-		Point currentPixel = { x, y };
-		x = rotationCenter.coordX + (currentPixel.coordX - rotationCenter.coordX) * rotationCos - (currentPixel.coordY - rotationCenter.coordY) * rotationSin;
-		y = rotationCenter.coordY + (currentPixel.coordY - rotationCenter.coordY) * rotationCos + (currentPixel.coordX - rotationCenter.coordX) * rotationSin;
+		Point currentPixel = { figureCopy.pixelsCoord[i].coordX, figureCopy.pixelsCoord[i].coordY };
+		figureCopy.pixelsCoord[i].coordX = int(rotationCenter.coordX + 
+			(currentPixel.coordX - rotationCenter.coordX) * rotationCos - 
+			(currentPixel.coordY - rotationCenter.coordY) * rotationSin);
+		figureCopy.pixelsCoord[i].coordY = int(rotationCenter.coordY + 
+			(currentPixel.coordY - rotationCenter.coordY) * rotationCos + 
+			(currentPixel.coordX - rotationCenter.coordX) * rotationSin);
 
 		// check if pixel in game grame
 		// [0; 0] - gameFieldSize - coordinates from to of game frame
@@ -248,8 +250,8 @@ void Figure::draw(sf::RenderWindow& window)
 	for (int i = 0; i < pixelCount; i++)
 	{
 		// set figure in current coordinate
-		sprite.setPosition(pixelsCoord[i].coordX * config::gamePixelSize.width,
-			pixelsCoord[i].coordY * config::gamePixelSize.height);
+		sprite.setPosition((float)(pixelsCoord[i].coordX * config::gamePixelSize.width),
+			(float)(pixelsCoord[i].coordY * config::gamePixelSize.height));
 		window.draw(sprite);
 	}
 }

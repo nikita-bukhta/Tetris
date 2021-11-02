@@ -19,6 +19,8 @@ ClassicMode::ClassicMode(void)
 	// create game window
 	this->window.create(sf::VideoMode(config::mainWindowSize.width, config::mainWindowSize.height),
 		"Tetris", sf::Style::Default);
+	// figure fall ones 2 seconds;
+	this->fallenTimeSeconds = this->startFallenTimeSeconds = 2.0;
 
 	// ---------------------------filling vectors with figures---------------------------- //
 
@@ -169,7 +171,7 @@ int ClassicMode::startGame(void)
 		// 
 		// TODO:	add boosting time that equal with count of score
 		//			more score you have, bigger figure falling speed
-		if (timer.getElapsedTime().asSeconds() >= 1.0)
+		if (timer.getElapsedTime().asSeconds() >= this->fallenTimeSeconds)
 		{
 			// if we are in the button of game field
 			// TODO: fix time we need waiting to control new figure
@@ -182,7 +184,10 @@ int ClassicMode::startGame(void)
 				std::vector<int> filledLines;
 				this->getFilledLinesVector(filledLines);
 				this->destroyLines(filledLines);
-				this->updateScore(filledLines.size());
+				if (this->updateScore(filledLines.size()))
+				{
+					this->boostSpeed();
+				}
 			}
 			// if we found figure under our figure
 			else if (!thereIsEmpty())
@@ -194,7 +199,10 @@ int ClassicMode::startGame(void)
 				std::vector<int> filledLines;
 				this->getFilledLinesVector(filledLines);
 				this->destroyLines(filledLines);
-				this->updateScore(filledLines.size());
+				if (this->updateScore(filledLines.size()))
+				{
+					this->boostSpeed();
+				}
 			}
 
 			timer.restart();
@@ -207,7 +215,7 @@ int ClassicMode::startGame(void)
 			window.draw(this->gameOverSprite);
 			window.display();
 			timer.restart();
-			while (timer.getElapsedTime().asSeconds() < 2.0) {};
+			while (timer.getElapsedTime().asSeconds() < 2.0f) {};
 			break;
 		}
 
@@ -264,7 +272,10 @@ void ClassicMode::bindingKeys(const int pressedKey)
 			std::vector<int> filledLines;
 			this->getFilledLinesVector(filledLines);
 			this->destroyLines(filledLines);
-			this->updateScore(filledLines.size());
+			if (this->updateScore(filledLines.size()))
+			{
+				this->boostSpeed();
+			}
 		}
 		// if we found figure under our figure
 		else if (!thereIsEmpty())
@@ -276,7 +287,10 @@ void ClassicMode::bindingKeys(const int pressedKey)
 			std::vector<int> filledLines;
 			this->getFilledLinesVector(filledLines);
 			this->destroyLines(filledLines);
-			this->updateScore(filledLines.size());
+			if (this->updateScore(filledLines.size()))
+			{
+				this->boostSpeed();
+			}
 		}
 		break;
 
@@ -299,6 +313,10 @@ void ClassicMode::bindingKeys(const int pressedKey)
 					this->processingFigures[0].move(-1, 0);
 					break;
 				}
+			}
+			else if (figuresCoord[4].coordY < (config::gameFieldSize.height / config::gamePixelSize.height))
+			{
+				break;
 			}
 			// if figure is left
 			if (figuresCoord[0].coordX < config::gameFieldSize.width / config::gamePixelSize.width / 2)
@@ -398,17 +416,36 @@ void ClassicMode::drawOldFigures(void)
 	}
 }
 
-void ClassicMode::updateScore(const int destroyedLinesCount)
+// update score if destroyed lines count > 0
+// 
+// destryedLinesCount - count of lines that have been destroyed
+// 
+// return true	- if score has been updated
+// return false - if not
+//
+bool ClassicMode::updateScore(const int destroyedLinesCount)
 {
 	if (destroyedLinesCount <= 0)
 	{
-		return;
+		return false;
 	}
 	this->totalScore += 125 * destroyedLinesCount - 25;
 	this->scoreText.setString(std::to_string(totalScore));
 	this->scoreText.setPosition(config::gameFieldSize.width + (config::infoGroundSize.width -
 		(std::to_string(totalScore).size() * config::scoreFontSize)),
 		config::gameFieldSize.height * 2.0f / 3.4f);
+
+	return true;
+}
+
+void ClassicMode::boostSpeed(void)
+{
+	this->fallenTimeSeconds = this->startFallenTimeSeconds - ((double)this->totalScore * 0.001);
+	if (this->fallenTimeSeconds < 0.01)
+	{
+		this->fallenTimeSeconds = 0.01;
+	}
+	std::cout << startFallenTimeSeconds << "\t" << fallenTimeSeconds << "\t" << ((double)this->totalScore * 0.001) << std::endl;
 }
 
 // set game frame with new figure

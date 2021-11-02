@@ -31,6 +31,9 @@ private:
 	sf::Text scoreText;						// so...
 	int totalScore;							// how many score you have
 
+	double startFallenTimeSeconds;
+	double fallenTimeSeconds;
+
 	sf::RenderWindow window;				// main window
 	std::vector<Figure*> figuresVector;		// there are contain all figures
 	std::vector<Figure> processingFigures;	// there are figures, that displaing on the screen (current and next)
@@ -40,7 +43,8 @@ private:
 	// work with figure
 	void createNewFigure(void);
 	void drawOldFigures(void);
-	void updateScore(const int destroyedLinesCount);
+	bool updateScore(const int destroyedLinesCount);
+	void boostSpeed(void);
 
 	// work with game field
 	void setCoordToGamefield(void);

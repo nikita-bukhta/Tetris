@@ -284,12 +284,24 @@ void ClassicMode::bindingKeys(const int pressedKey)
 	case sf::Keyboard::Up:
 	case sf::Keyboard::W:
 	case sf::Keyboard::Space:
-		Point onePixelCoord = this->processingFigures[0].getCoord()[0];
-		// try to rotate
-		while(!this->processingFigures[0].rotate(90))
+		std::vector<Point> figuresCoord = this->processingFigures[0].getCoord();
+		const int pixelCount = figuresCoord.size();
+		int attemps = 0;
+		// try to rotate while attemps to rotate < pixelCount or while we do not rotate
+		while (!this->processingFigures[0].rotate(90))
 		{
+			if (figuresCoord[4].coordY < (pixelCount / 2))
+			{
+				this->processingFigures[0].move(0, 1);
+				// if there is  busy
+				if (!this->thereIsEmpty())
+				{
+					this->processingFigures[0].move(-1, 0);
+					break;
+				}
+			}
 			// if figure is left
-			if (onePixelCoord.coordX < config::gameFieldSize.width / config::gamePixelSize.width / 2)
+			if (figuresCoord[0].coordX < config::gameFieldSize.width / config::gamePixelSize.width / 2)
 			{
 				this->processingFigures[0].move(1, 0);
 				// if there is  busy

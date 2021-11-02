@@ -8,10 +8,7 @@
 #include "Figure.h"
 #include "config.h"
 
-// TODO:	show next figure
-//			show total score (more lines you destroy simultaneously, more score you get)
-//			add boosting depending from score
-//
+// TODO:	понять почему в один момент все фигуры останавливаются
 
 // create main window and figures we use in game
 ClassicMode::ClassicMode(void)
@@ -21,8 +18,12 @@ ClassicMode::ClassicMode(void)
 		"Tetris", sf::Style::Default);
 	// figure fall ones 2 seconds;
 	this->fallenTimeSeconds = this->startFallenTimeSeconds = 2.0;
+	// time to create new figure after fall
+	this->creatingTimeSeconds = 0.5;
 
 	// ---------------------------filling vectors with figures---------------------------- //
+
+	this->placeNewFigure = false;
 
 	// download figures textures
 	if (!this->figureTextures.loadFromFile("img/minecraftTexture.png"))
@@ -139,14 +140,21 @@ ClassicMode::~ClassicMode(void)
 int ClassicMode::startGame(void)
 {
 	// move to center of the screen
-	// we divide width of game fild by width of pixelSize to know how many pixels we can fit into.
-	// divide by 2 to find center of game field and minus 1 to move left
-	this->processingFigures[0].setPosition(config::gameFieldSize.width / config::gamePixelSize.width / 2 - 1, 0);
+	// set on the middle
+	this->processingFigures[0].setPosition(config::gameFieldSize.width / config::gamePixelSize.width / 2 - 1, 2);
+	// rotate for more comfort
+	this->processingFigures[0].rotate(90);
+	// set again to be in the middle
+	this->processingFigures[0].setPosition(config::gameFieldSize.width / config::gamePixelSize.width / 2 - 1, 2);
 
+	// analogical but for information table
+	this->processingFigures[1].setPosition(config::gameFieldSize.width / config::gamePixelSize.width / 2, 5);
+	this->processingFigures[1].rotate(90);
 	this->processingFigures[1].setPosition((2 * config::gameFieldSize.width + config::infoGroundSize.width) /
-		(2 * config::gamePixelSize.width), 4);
+		(2 * config::gamePixelSize.width) - 1, 5);
 
-	sf::Clock timer;  // start timer;
+	sf::Clock timer;				// start timer;
+	sf::Clock timeToCreateFigure;	// timer to create a new figure
 	while (window.isOpen())
 	{
 		sf::Event event;
@@ -161,7 +169,7 @@ int ClassicMode::startGame(void)
 
 				// user has pressed button
 			case sf::Event::KeyPressed:
-				this->bindingKeys(event.key.code);
+				this->bindingKeys(event.key.code, timeToCreateFigure);
 
 			}
 		}
@@ -169,49 +177,57 @@ int ClassicMode::startGame(void)
 		// if time left, we move down figure by 1
 		// and restart timer
 		// 
-		// TODO:	add boosting time that equal with count of score
-		//			more score you have, bigger figure falling speed
 		if (timer.getElapsedTime().asSeconds() >= this->fallenTimeSeconds)
 		{
 			// if we are in the button of game field
-			// TODO: fix time we need waiting to control new figure
-			//
+			this->processingFigures[0].move(0, 1);
 			if (!this->processingFigures[0].move(0, 1))
 			{
-				this->createNewFigure();
-
-				// destroy filled lines
-				std::vector<int> filledLines;
-				this->getFilledLinesVector(filledLines);
-				this->destroyLines(filledLines);
-				if (this->updateScore(filledLines.size()))
-				{
-					this->boostSpeed();
-				}
+				this->placeNewFigure = true;
+				timeToCreateFigure.restart();
 			}
-			// if we found figure under our figure
-			else if (!thereIsEmpty())
+			else
 			{
 				this->processingFigures[0].move(0, -1);
-				this->createNewFigure();
+			}
+			// if we found figure under our figure
 
-				// destroy filled lines
-				std::vector<int> filledLines;
-				this->getFilledLinesVector(filledLines);
-				this->destroyLines(filledLines);
-				if (this->updateScore(filledLines.size()))
-				{
-					this->boostSpeed();
-				}
+			if ((!thereIsEmpty()))
+			{
+				this->processingFigures[0].move(0, -1);
+
+				this->placeNewFigure = true;
+				timeToCreateFigure.restart();
 			}
 
 			timer.restart();
 		}
 
+		// create new figure
+		if (this->placeNewFigure && timeToCreateFigure.getElapsedTime().asSeconds() >= 
+			this->creatingTimeSeconds)
+		{
+			this->createNewFigure();
+
+			// destroy filled lines
+			std::vector<int> filledLines;
+			this->getFilledLinesVector(filledLines);
+			this->destroyLines(filledLines);
+			// if score was updated
+			if (this->updateScore(filledLines.size()))
+			{
+				this->boostSpeed();
+			}
+
+			this->placeNewFigure = false;
+			timer.restart();
+		}
+
 		window.clear(sf::Color::White);
 
-		if (!this->thereIsEmpty())
+		if (!this->thereIsEmpty(0, 2))
 		{
+			this->outputGameField();
 			window.draw(this->gameOverSprite);
 			window.display();
 			timer.restart();
@@ -234,9 +250,10 @@ int ClassicMode::startGame(void)
 
 // there are contain binding keys
 // 
-// pressed key - button you have pressed
-// figure - current figure
-void ClassicMode::bindingKeys(const int pressedKey)
+// pressed key			- button you have pressed
+// timeToCreateFigure	- timer to create new figure
+//
+void ClassicMode::bindingKeys(const int pressedKey, sf::Clock& timeToCreateFigure)
 {
 	switch (pressedKey)
 	{
@@ -264,32 +281,29 @@ void ClassicMode::bindingKeys(const int pressedKey)
 	case sf::Keyboard::Down:
 	case sf::Keyboard::S:
 		// if we are in the button of game field
+		this->processingFigures[0].move(0, 1);
 		if (!this->processingFigures[0].move(0, 1))
 		{
-			this->createNewFigure();
-
-			// destroy filled lines
-			std::vector<int> filledLines;
-			this->getFilledLinesVector(filledLines);
-			this->destroyLines(filledLines);
-			if (this->updateScore(filledLines.size()))
+			this->placeNewFigure = true;
+			if (timeToCreateFigure.getElapsedTime().asSeconds() < this->creatingTimeSeconds)
 			{
-				this->boostSpeed();
+				timeToCreateFigure.restart();
 			}
 		}
-		// if we found figure under our figure
-		else if (!thereIsEmpty())
+		else
 		{
 			this->processingFigures[0].move(0, -1);
-			this->createNewFigure();
+		}
 
-			// destroy filled lines
-			std::vector<int> filledLines;
-			this->getFilledLinesVector(filledLines);
-			this->destroyLines(filledLines);
-			if (this->updateScore(filledLines.size()))
+		// if we found figure under our figure
+		if ((!thereIsEmpty()))
+		{
+			this->processingFigures[0].move(0, -1);
+
+			this->placeNewFigure = true;
+			if (timeToCreateFigure.getElapsedTime().asSeconds() < this->creatingTimeSeconds)
 			{
-				this->boostSpeed();
+				timeToCreateFigure.restart();
 			}
 		}
 		break;
@@ -368,9 +382,12 @@ void ClassicMode::createNewFigure(void)
 	// move to center of the screen
 	// we divide width of game fild by width of pixelSize to know how many pixels we can fit into.
 	// divide by 2 to find center of game field and minus 1 to move left
-	this->processingFigures[0].setPosition(config::gameFieldSize.width / config::gamePixelSize.width / 2 - 1, 0);
+	this->processingFigures[0].setPosition(config::gameFieldSize.width / config::gamePixelSize.width / 2 - 1, 2);
+
+	this->processingFigures[1].setPosition(config::gameFieldSize.width / config::gamePixelSize.width / 2, 5);
+	this->processingFigures[1].rotate(90);
 	this->processingFigures[1].setPosition((2 * config::gameFieldSize.width + config::infoGroundSize.width) /
-		(2 * config::gamePixelSize.width), 4);
+		(2 * config::gamePixelSize.width) - 1, 5);
 }
 
 // draw all pixels, which we put
@@ -478,6 +495,34 @@ bool ClassicMode::thereIsEmpty(void)
 	{
 		if (this->gameField[figureCoord[i].coordY][figureCoord[i].coordX]
 			!= FigureType::Empty)
+		{
+			return false;
+		}
+	}
+
+	return true;
+}
+
+bool ClassicMode::thereIsEmpty(const int gameFieldLine)
+{
+	const int widthField = this->gameField[gameFieldLine].size();
+
+	for (int i = 0; i < widthField; i++)
+	{
+		if (this->gameField[gameFieldLine][i] != FigureType::Empty)
+		{
+			return false;
+		}
+	}
+	
+	return true;
+}
+
+bool ClassicMode::thereIsEmpty(const int lineFrom, const int lineTo)
+{
+	for (int line = 0; line <= lineTo; line++)
+	{
+		if (!this->thereIsEmpty(line))
 		{
 			return false;
 		}

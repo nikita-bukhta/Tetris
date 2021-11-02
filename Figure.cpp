@@ -226,8 +226,8 @@ std::vector<Point> Figure::getCoord(void)
 //
 void Figure::setPosition(const int coordX, const int coordY)
 {
-	const int moveXBy = coordX - this->pixelsCoord[0].coordX;
-	const int moveYBy = coordY - this->pixelsCoord[0].coordY;
+	const int moveXBy = coordX - this->pixelsCoord[2].coordX;
+	const int moveYBy = coordY - this->pixelsCoord[2].coordY;
 
 	for (int i = 0; i < pixelCount; i++)
 	{

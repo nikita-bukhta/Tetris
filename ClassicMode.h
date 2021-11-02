@@ -31,14 +31,17 @@ private:
 	sf::Text scoreText;						// so...
 	int totalScore;							// how many score you have
 
+	bool placeNewFigure;
+
 	double startFallenTimeSeconds;
 	double fallenTimeSeconds;
+	double creatingTimeSeconds;
 
 	sf::RenderWindow window;				// main window
 	std::vector<Figure*> figuresVector;		// there are contain all figures
 	std::vector<Figure> processingFigures;	// there are figures, that displaing on the screen (current and next)
 
-	void bindingKeys(const int pressedKey);
+	void bindingKeys(const int pressedKey, sf::Clock& timeToCreateFigure);
 
 	// work with figure
 	void createNewFigure(void);
@@ -49,6 +52,8 @@ private:
 	// work with game field
 	void setCoordToGamefield(void);
 	bool thereIsEmpty(void);
+	bool thereIsEmpty(const int gameFieldLine);
+	bool thereIsEmpty(const int lineFrom, const int lineTo);
 	void getFilledLinesVector(std::vector<int>& filledLines);
 	void destroyLines(std::vector<int> filledLines);
 
